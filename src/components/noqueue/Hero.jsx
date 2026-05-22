@@ -1,6 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Play, Building2, Clock, RotateCcw, FileCheck, MapPin } from 'lucide-react';
+import { ArrowRight, Play, Building2, Clock, RotateCcw, FileCheck, MapPin, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const metrics = [
@@ -47,19 +48,19 @@ export default function Hero() {
             </p>
 
             <div className="flex flex-wrap gap-3 mt-8">
-              <a href="#chat">
+              <Link to="/start">
                 <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-2xl px-6 h-12 text-base font-semibold gap-2">
-                  Start Solving <ArrowRight className="w-4 h-4" />
+                  Start a Case <ArrowRight className="w-4 h-4" />
                 </Button>
-              </a>
-              <a href="#workflows">
+              </Link>
+              <Link to="/cases">
                 <Button size="lg" variant="outline" className="border-white/10 text-white hover:bg-white/5 rounded-2xl px-6 h-12 text-base font-semibold gap-2">
-                  <Play className="w-4 h-4" /> Try Demo Flow
+                  <Briefcase className="w-4 h-4" /> My Cases
                 </Button>
-              </a>
-              <a href="#institutions">
+              </Link>
+              <a href="#chat">
                 <Button size="lg" variant="outline" className="border-white/10 text-white hover:bg-white/5 rounded-2xl px-6 h-12 text-base font-semibold gap-2">
-                  <Building2 className="w-4 h-4" /> View Institutions
+                  <Play className="w-4 h-4" /> Try Chat Demo
                 </Button>
               </a>
             </div>
@@ -108,16 +109,23 @@ export default function Hero() {
                 {/* AI response */}
                 <div className="flex justify-start">
                   <div className="bg-white/5 border border-white/10 rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%]">
+                    <div className="text-[10px] font-bold text-success mb-1.5">✅ This can be done ONLINE</div>
                     <p className="text-sm text-slate-200 leading-relaxed">
-                      You need <span className="text-primary font-semibold">4 documents</span>, one declaration, and the best office is{' '}
-                      <span className="text-accent font-semibold">Direcția de Evidență a Persoanelor</span>.
+                      Skip the queue. Use <span className="text-primary font-semibold">e-Cerere Cluj</span> or DEPABD online portal.
                     </p>
-                    <p className="text-sm text-slate-200 mt-2">
-                      Current estimated queue: <span className="text-success font-semibold">24 minutes</span>
-                    </p>
-                    <div className="mt-3 pt-3 border-t border-white/5 flex items-center gap-2">
+                    <div className="mt-2 pt-2 border-t border-white/5 grid grid-cols-2 gap-2">
+                      <div className="text-center">
+                        <div className="text-xs font-bold text-success">Case saved</div>
+                        <div className="text-[10px] text-slate-500">Tracked & reminded</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs font-bold text-primary">24 min</div>
+                        <div className="text-[10px] text-slate-500">In-person queue</div>
+                      </div>
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                      <span className="text-xs text-slate-400">AI-powered • Real-time</span>
+                      <span className="text-xs text-slate-400">Online-first routing · Case OS</span>
                     </div>
                   </div>
                 </div>

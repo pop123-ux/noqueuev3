@@ -6,6 +6,9 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Home from './pages/Home';
+import CaseStart from './pages/CaseStart';
+import Cases from './pages/Cases';
+import AppointmentWatchPage from './pages/AppointmentWatch';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -35,6 +38,9 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/start" element={<CaseStart />} />
+      <Route path="/cases" element={<Cases />} />
+      <Route path="/appointments/watch" element={<AppointmentWatchPage />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

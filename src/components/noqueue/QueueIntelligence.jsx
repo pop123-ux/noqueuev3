@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { motion } from 'framer-motion';
-import { Clock, TrendingUp, TrendingDown, Minus, Users, Zap } from 'lucide-react';
+import { Clock, TrendingUp, TrendingDown, Minus, Users, Zap, Radio } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { clujInstitutions, getQueueStatus } from '@/lib/data/clujInstitutions';
+import QueueReportModal from './QueueReportModal';
 
 const trendConfig = {
   rising: { icon: TrendingUp, color: 'text-destructive', label: 'Rising' },
@@ -23,6 +25,7 @@ const hourlyData = [
 ];
 
 export default function QueueIntelligence() {
+  const [showReport, setShowReport] = useState(false);
   const sorted = [...clujInstitutions].sort((a, b) => a.queue.current - b.queue.current);
 
   return (
@@ -34,11 +37,18 @@ export default function QueueIntelligence() {
           viewport={{ once: true }}
           className="text-center mb-10"
         >
-          <span className="text-xs font-semibold uppercase tracking-wider text-warning">Simulated data</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-warning">Live Signal Network</span>
           <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-white">Queue Intelligence</h2>
           <p className="mt-3 text-slate-400 max-w-xl mx-auto">
-            Synthetic wait time simulation across all Cluj-Napoca civic offices.
+            Crowd-sourced wait time signals from Cluj-Napoca civic offices. Report your real wait time to help others.
           </p>
+          <button
+            onClick={() => setShowReport(true)}
+            className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-sm font-semibold hover:bg-primary/20 transition-colors"
+          >
+            <Radio className="w-4 h-4" />
+            Report your wait time now
+          </button>
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
@@ -149,11 +159,15 @@ export default function QueueIntelligence() {
           </div>
           <div className="px-4 py-3 border-t border-white/5">
             <p className="text-[10px] text-slate-600 text-center">
-              Simulated data for hackathon demo · Real-time integration ready via Google Places + crowd-reporting API
+              Proprietary crowd-sourced signals · Report your wait to help build real-time queue data
             </p>
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showReport && <QueueReportModal onClose={() => setShowReport(false)} />}
+      </AnimatePresence>
     </section>
   );
 }
