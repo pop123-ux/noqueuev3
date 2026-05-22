@@ -28,6 +28,7 @@ export const civicDocuments = [
     descriptionRo: "Cerere standard pentru reînnoirea sau înlocuirea cărții de identitate.",
     eligibility: ["Romanian citizen", "Expired ID or ID expiring within 180 days", "Name/address change"],
     templateUrl: "https://evpers.ro/wp-content/uploads/2020/01/Cerere-eliberare-CI.pdf",
+    sourceType: "official_page",
     sourceLabel: "evpers.ro — official SPCLEP form",
     attachments: [
       "Birth certificate (original + copy)",
@@ -63,6 +64,7 @@ export const civicDocuments = [
     descriptionRo: "Cerere pentru înlocuirea actului de identitate pierdut sau furat. Necesită declarație la poliție.",
     eligibility: ["ID reported lost or stolen", "Romanian citizen"],
     templateUrl: "https://evpers.ro/wp-content/uploads/2020/01/Cerere-eliberare-CI.pdf",
+    sourceType: "official_page",
     sourceLabel: "evpers.ro — official SPCLEP form",
     attachments: [
       "Police loss/theft declaration (from IPJ Cluj or local precinct)",
@@ -93,6 +95,7 @@ export const civicDocuments = [
     descriptionRo: "Declarație la poliție privind pierderea sau furtul actului de identitate.",
     eligibility: ["Anyone reporting a lost/stolen ID"],
     templateUrl: null,
+    sourceType: "physical_office_only",
     templateNote: "Filed directly at police station — no pre-download needed. Available at counter.",
     sourceLabel: "IPJ Cluj — in-person",
     attachments: ["No documents needed — just your oral/written statement"],
@@ -121,6 +124,7 @@ export const civicDocuments = [
     descriptionRo: "Cerere oficială pentru eliberarea pașaportului românesc — adulți sau minori.",
     eligibility: ["Romanian citizen", "Valid ID at time of application"],
     templateUrl: "https://www.spcp.ro/sites/default/files/Cerere_simplu_2020.pdf",
+    sourceType: "official_page",
     sourceLabel: "spcp.ro — official Pașapoarte form",
     attachments: [
       "Valid ID card",
@@ -157,6 +161,7 @@ export const civicDocuments = [
     descriptionRo: "Pașaport temporar eliberat în regim de urgență — valabilitate 1 an.",
     eligibility: ["Documented urgent travel need", "Medical emergency, funeral, professional obligation"],
     templateUrl: "https://www.spcp.ro/sites/default/files/Cerere_simplu_2020.pdf",
+    sourceType: "official_page",
     sourceLabel: "spcp.ro — same form, marked urgent",
     attachments: [
       "Valid ID",
@@ -190,6 +195,7 @@ export const civicDocuments = [
     descriptionRo: "Cerere pentru preschimbarea sau reînnoirea permisului de conducere.",
     eligibility: ["Valid ID", "Medical certificate from authorized clinic", "Expired or expiring license"],
     templateUrl: "https://www.drpciv.ro/sites/default/files/Cerere_permis.pdf",
+    sourceType: "official_page",
     sourceLabel: "drpciv.ro — official DRPCIV form",
     attachments: [
       "Valid ID (original + copy)",
@@ -229,6 +235,7 @@ export const civicDocuments = [
     descriptionRo: "Cerere pentru înmatricularea sau transcrierea unui vehicul în Cluj.",
     eligibility: ["New vehicle owner", "Vehicle purchased in Romania or EU"],
     templateUrl: "https://www.drpciv.ro/sites/default/files/Cerere_inmatriculare.pdf",
+    sourceType: "official_page",
     sourceLabel: "drpciv.ro — official form",
     attachments: [
       "Valid ID",
@@ -266,6 +273,7 @@ export const civicDocuments = [
     descriptionRo: "Cerere pentru certificat de atestare fiscală — necesar la vânzări imobiliare, tranzacții comerciale.",
     eligibility: ["Any natural person with Romanian CNP"],
     templateUrl: "https://static.anaf.ro/static/10/Anaf/formulare/Cerere_certificat_atestare_fiscala_PF_OPANAF_3654_2015.pdf",
+    sourceType: "downloadable_pdf",
     sourceLabel: "anaf.ro — official ANAF form",
     attachments: ["Valid ID", "Request form signed", "SPV digital signature (for online)"],
     whoSigns: "The applicant (or authorized representative)",
@@ -292,6 +300,7 @@ export const civicDocuments = [
     descriptionRo: "Cazier fiscal pentru persoane fizice sau juridice — necesar pentru funcții de conducere, licitații.",
     eligibility: ["Individuals and legal entities with Romanian tax ID"],
     templateUrl: "https://static.anaf.ro/static/10/Anaf/formulare/070_OPANAF_3656_2021.pdf",
+    sourceType: "downloadable_pdf",
     sourceLabel: "anaf.ro — official form 070",
     attachments: ["ID", "Form 070", "Company CUI (if for legal entity)"],
     whoSigns: "The applicant or legal representative",
@@ -320,6 +329,7 @@ export const civicDocuments = [
     descriptionRo: "Declarație pentru asigurarea voluntară la CJAS pentru persoane fără venit.",
     eligibility: ["Not employed", "Not retired", "Not student (for specific exemptions)"],
     templateUrl: "https://cnas.ro/wp-content/uploads/2021/01/Declaratie-asigurat.pdf",
+    sourceType: "official_page",
     sourceLabel: "cnas.ro — official CJAS form",
     attachments: ["Valid ID", "Proof of uninsured status (employer letter confirming end of contract, etc.)"],
     whoSigns: "The applicant",
@@ -348,6 +358,7 @@ export const civicDocuments = [
     descriptionRo: "Cerere pentru înregistrarea unui SRL nou la Registrul Comerțului Cluj.",
     eligibility: ["Any natural person 18+ with Romanian or EU ID", "Must have registered office address"],
     templateUrl: "https://www.onrc.ro/templates/site/formulare/cerere_inregistrare.pdf",
+    sourceType: "official_page",
     sourceLabel: "onrc.ro — official ONRC form",
     attachments: [
       "Act constitutiv (Articles of Association) — notarized or as simple written form",
@@ -384,6 +395,7 @@ export const civicDocuments = [
     descriptionRo: "Model de act constitutiv pentru SRL cu unic asociat.",
     eligibility: ["Single-person company founders"],
     templateUrl: "https://www.onrc.ro/templates/site/formulare/act_constitutiv_srl_1asociat.pdf",
+    sourceType: "official_page",
     sourceLabel: "onrc.ro — model act constitutiv",
     attachments: ["Completed and signed by founder", "Notarized or as simple written act (post 2022)"],
     whoSigns: "The sole associate",
@@ -412,6 +424,7 @@ export const civicDocuments = [
     descriptionRo: "Cerere pentru permis de ședere pentru cetățeni din afara UE.",
     eligibility: ["Non-EU citizen with valid long-stay visa or work/study permit"],
     templateUrl: "https://igi.mai.gov.ro/formulare/cerere-permis-sedere.pdf",
+    sourceType: "official_page",
     sourceLabel: "igi.mai.gov.ro — official IGI form",
     attachments: [
       "Valid passport",
@@ -451,6 +464,7 @@ export const civicDocuments = [
     descriptionRo: "Adeverință de student necesară pentru asigurare de sănătate, transport, burse sociale.",
     eligibility: ["Enrolled student at Romanian university"],
     templateUrl: null,
+    sourceType: "physical_office_only",
     templateNote: "Issued exclusively by your university secretariat. Cannot be downloaded — must be requested in person or online via university portal.",
     sourceLabel: "University secretariat — UBB Cluj, UTCN, USAMV, etc.",
     attachments: ["Student ID", "Enrollment status confirmation"],
@@ -485,6 +499,7 @@ export const civicDocuments = [
       "Both spouses must appear in person before notary"
     ],
     templateUrl: null,
+    sourceType: "physical_office_only",
     templateNote: "Application drafted by the notary — no pre-download required. Both spouses appear together.",
     sourceLabel: "Uniunea Națională a Notarilor Publici",
     attachments: [
@@ -527,8 +542,10 @@ export const civicDocuments = [
       "No property disputes",
       "Marriage registered in Romanian civil registry"
     ],
-    templateUrl: "https://starea-civila.ro/cerere-divort-administrativ.pdf",
-    sourceLabel: "Starea Civilă — administrative procedure",
+    templateUrl: null,
+    sourceType: "physical_office_only",
+    templateNote: "Form provided at the Civil Registry counter. Both spouses must appear in person.",
+    sourceLabel: "Starea Civilă Cluj-Napoca — in person",
     attachments: [
       "Marriage certificate (original)",
       "Both ID cards",
@@ -563,8 +580,9 @@ export const civicDocuments = [
       "Disputed financial/property matters",
       "Domestic violence situations"
     ],
-    templateUrl: "https://www.just.ro/formulare/cerere-divort-judecata.pdf",
-    sourceLabel: "just.ro — Ministry of Justice template",
+    templateUrl: "https://www.just.ro/formulare/",
+    sourceType: "official_page",
+    sourceLabel: "just.ro — Ministry of Justice forms page",
     attachments: [
       "Marriage certificate",
       "Birth certificates of minor children",
@@ -601,8 +619,10 @@ export const civicDocuments = [
     description: "Request for a duplicate birth certificate when the original is lost or damaged.",
     descriptionRo: "Cerere pentru duplicat certificat de naștere — pierdut, deteriorat sau pentru uz oficial.",
     eligibility: ["Romanian citizen", "Parent or legal guardian for minors"],
-    templateUrl: "https://starea-civila.ro/cerere-duplicat-nastere.pdf",
-    sourceLabel: "Starea Civilă Cluj-Napoca",
+    templateUrl: null,
+    sourceType: "physical_office_only",
+    templateNote: "Request form available at the Civil Registry counter. Cannot be downloaded in advance.",
+    sourceLabel: "Starea Civilă Cluj-Napoca — in person",
     attachments: [
       "Valid ID",
       "Application form",
@@ -633,6 +653,7 @@ export const civicDocuments = [
     descriptionRo: "Cazier judiciar — necesar pentru angajare, funcții publice, vize, înregistrare firmă.",
     eligibility: ["Any Romanian citizen (for themselves)"],
     templateUrl: null,
+    sourceType: "online_form",
     templateNote: "Available online at e-cazier.mai.gov.ro — no pre-downloaded form needed. In-person: form at IPJ counter.",
     sourceLabel: "e-cazier.mai.gov.ro — recommended online route",
     attachments: ["Valid ID only"],

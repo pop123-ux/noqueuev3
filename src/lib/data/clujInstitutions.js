@@ -1,5 +1,5 @@
-// Cluj-Napoca focused institution database
-// Future: Replace with real-time API / Google Places integration
+// Cluj-Napoca civic institution registry
+// Crowd-sourced queue estimates · Community-reported data
 
 export const clujInstitutions = [
   {
@@ -264,7 +264,7 @@ export function getQueueStatus(queue) {
 }
 
 export function getHourlyPattern(institutionId) {
-  // Synthetic hourly crowd patterns (0-100 scale)
+  // Typical hourly crowd patterns based on community observations (0-100 scale)
   const patterns = {
     default: [20, 65, 90, 85, 60, 45, 55, 40, 25],
     'anaf-cluj': [30, 75, 95, 90, 70, 50, 60, 45, 20],

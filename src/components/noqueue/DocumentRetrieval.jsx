@@ -74,9 +74,9 @@ export default function DocumentRetrieval({ initialWorkflowId = null }) {
             <FileSearch className="w-3.5 h-3.5 text-primary" />
             <span className="text-xs font-medium text-primary">Civic Document Engine</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white">Document Retrieval</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white">Document & Procedure Guide</h2>
           <p className="mt-3 text-slate-400 max-w-xl mx-auto">
-            Every official form for Cluj-Napoca bureaucracy — explained, downloadable, and guided by AI. No Google needed.
+            Official procedures for Cluj-Napoca — required documents, trust-verified sources, and step-by-step guidance.
           </p>
         </motion.div>
 

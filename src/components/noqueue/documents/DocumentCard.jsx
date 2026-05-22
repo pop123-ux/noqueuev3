@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FileText, Download, ExternalLink, ChevronDown, ChevronUp,
-  CheckCircle2, AlertTriangle, Globe, Clock, Building2, Info
+  FileText, ExternalLink, ChevronDown, ChevronUp,
+  CheckCircle2, AlertTriangle, Globe, Clock, Building2, Info,
+  ShieldCheck, ShieldAlert, HelpCircle, Download, Copy, List
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -11,6 +12,116 @@ const complexityConfig = {
   medium: { label: 'Moderate', color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
   high: { label: 'Complex', color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
 };
+
+// Trust indicator based on whether source is verified
+function SourceTrustBadge({ doc }) {
+  const hasVerifiedPdf = doc.templateUrl && doc.sourceType === 'downloadable_pdf';
+  const hasOfficialPage = doc.onlineUrl || doc.officialPageUrl;
+  const isOfficeOnly = doc.sourceType === 'physical_office_only';
+
+  if (hasVerifiedPdf) {
+    return (
+      <span className="flex items-center gap-1 text-[9px] font-medium text-success bg-success/10 px-1.5 py-0.5 rounded-full border border-success/20">
+        <ShieldCheck className="w-3 h-3" /> Verified official form
+      </span>
+    );
+  }
+  if (hasOfficialPage) {
+    return (
+      <span className="flex items-center gap-1 text-[9px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full border border-primary/20">
+        <ShieldCheck className="w-3 h-3" /> Official source
+      </span>
+    );
+  }
+  if (isOfficeOnly) {
+    return (
+      <span className="flex items-center gap-1 text-[9px] font-medium text-slate-400 bg-white/5 px-1.5 py-0.5 rounded-full border border-white/10">
+        <Building2 className="w-3 h-3" /> Obtained at office
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-1 text-[9px] font-medium text-warning bg-warning/10 px-1.5 py-0.5 rounded-full border border-warning/20">
+      <HelpCircle className="w-3 h-3" /> Verify at institution
+    </span>
+  );
+}
+
+// Action buttons — no fake downloads
+function DocumentActions({ doc }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyChecklist = () => {
+    if (!doc.attachments?.length) return;
+    const text = `${doc.titleEn || doc.title}\n\nRequired documents:\n${doc.attachments.map((a, i) => `${i + 1}. ${a}`).join('\n')}\n\nSubmit at: ${doc.whereSubmit}`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Only show real download if it's a verified PDF from official source
+  const canDownload = doc.templateUrl && doc.sourceType === 'downloadable_pdf';
+  const hasOfficialPage = doc.onlineUrl;
+  const hasOfficialSource = doc.templateUrl && !canDownload;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {canDownload && (
+        <a
+          href={doc.templateUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition-colors border border-primary/20"
+        >
+          <Download className="w-3.5 h-3.5" />
+          Download official form
+        </a>
+      )}
+
+      {hasOfficialSource && (
+        <a
+          href={doc.templateUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 text-slate-300 text-xs font-semibold hover:bg-white/8 transition-colors border border-white/10"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          Open official source
+        </a>
+      )}
+
+      {hasOfficialPage && (
+        <a
+          href={doc.onlineUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-success/10 text-success text-xs font-semibold hover:bg-success/20 transition-colors border border-success/20"
+        >
+          <Globe className="w-3.5 h-3.5" />
+          Do it online
+        </a>
+      )}
+
+      {doc.attachments?.length > 0 && (
+        <button
+          onClick={handleCopyChecklist}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 text-slate-300 text-xs font-semibold hover:bg-white/8 transition-colors border border-white/10"
+        >
+          {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? 'Copied!' : 'Copy checklist'}
+        </button>
+      )}
+
+      <a
+        href="#chat"
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent/10 text-accent text-xs font-semibold hover:bg-accent/20 transition-colors border border-accent/20"
+      >
+        <List className="w-3.5 h-3.5" />
+        Ask assistant
+      </a>
+    </div>
+  );
+}
 
 export default function DocumentCard({ doc, compact = false }) {
   const [expanded, setExpanded] = useState(false);
@@ -24,17 +135,14 @@ export default function DocumentCard({ doc, compact = false }) {
       className="rounded-2xl bg-white/[0.04] border border-white/8 overflow-hidden hover:border-white/12 transition-all"
     >
       {/* Header */}
-      <div
-        className="p-4 cursor-pointer"
-        onClick={() => setExpanded(!expanded)}
-      >
+      <div className="p-4 cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
             <FileText className="w-4 h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <div>
+              <div className="flex-1 min-w-0">
                 <p className="text-xs text-slate-500 mb-0.5">{doc.categoryLabel}</p>
                 <h4 className="text-sm font-semibold text-white leading-snug">{doc.titleEn || doc.title}</h4>
                 {!compact && (
@@ -55,7 +163,7 @@ export default function DocumentCard({ doc, compact = false }) {
             </div>
 
             {/* Quick info row */}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-2">
               <div className="flex items-center gap-1 text-[10px] text-slate-400">
                 <Building2 className="w-3 h-3 text-primary" />
                 <span>{doc.institution}</span>
@@ -66,9 +174,10 @@ export default function DocumentCard({ doc, compact = false }) {
               </div>
               {doc.canDoOnline && (
                 <span className="flex items-center gap-1 text-[10px] text-success bg-success/10 px-1.5 py-0.5 rounded-full">
-                  <Globe className="w-3 h-3" /> Online
+                  <Globe className="w-3 h-3" /> Online option
                 </span>
               )}
+              <SourceTrustBadge doc={doc} />
             </div>
           </div>
         </div>
@@ -85,11 +194,8 @@ export default function DocumentCard({ doc, compact = false }) {
             className="overflow-hidden"
           >
             <div className="px-4 pb-4 space-y-4 border-t border-white/5 pt-4">
-
-              {/* Description */}
               <p className="text-xs text-slate-300 leading-relaxed">{doc.description}</p>
 
-              {/* Eligibility */}
               {doc.eligibility?.length > 0 && (
                 <div>
                   <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Eligibility</p>
@@ -104,7 +210,6 @@ export default function DocumentCard({ doc, compact = false }) {
                 </div>
               )}
 
-              {/* Required attachments */}
               {doc.attachments?.length > 0 && (
                 <div>
                   <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Required Documents</p>
@@ -119,7 +224,6 @@ export default function DocumentCard({ doc, compact = false }) {
                 </div>
               )}
 
-              {/* Who signs / where */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-white/[0.03] border border-white/5 p-3">
                   <p className="text-[10px] font-semibold text-slate-400 mb-1">Who Signs</p>
@@ -131,7 +235,6 @@ export default function DocumentCard({ doc, compact = false }) {
                 </div>
               </div>
 
-              {/* Common mistakes */}
               {doc.commonMistakes?.length > 0 && (
                 <div className="rounded-xl bg-warning/6 border border-warning/15 p-3">
                   <p className="text-[10px] font-semibold text-warning mb-1.5 flex items-center gap-1">
@@ -145,7 +248,6 @@ export default function DocumentCard({ doc, compact = false }) {
                 </div>
               )}
 
-              {/* Legal basis */}
               {doc.legalBasis && (
                 <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
                   <Info className="w-3 h-3" />
@@ -153,38 +255,21 @@ export default function DocumentCard({ doc, compact = false }) {
                 </div>
               )}
 
+              {/* Template note for office-only forms */}
+              {!doc.templateUrl && doc.templateNote && (
+                <div className="rounded-xl bg-blue-500/8 border border-blue-500/15 p-3">
+                  <p className="text-[10px] font-semibold text-blue-400 mb-1 flex items-center gap-1">
+                    <Info className="w-3 h-3" /> How to get this form
+                  </p>
+                  <p className="text-xs text-slate-300">{doc.templateNote}</p>
+                </div>
+              )}
+
               {/* Action buttons */}
-              <div className="flex gap-2">
-                {doc.templateUrl ? (
-                  <a
-                    href={doc.templateUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition-colors border border-primary/20"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    Download Template
-                  </a>
-                ) : (
-                  <div className="flex-1 py-2.5 rounded-xl bg-white/[0.03] border border-white/8 text-center text-xs text-slate-500">
-                    {doc.templateNote || 'Template available at institution'}
-                  </div>
-                )}
-                {doc.canDoOnline && doc.onlineUrl && (
-                  <a
-                    href={doc.onlineUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-1 px-4 py-2.5 rounded-xl bg-success/10 text-success text-xs font-semibold hover:bg-success/20 transition-colors border border-success/20"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    Online
-                  </a>
-                )}
-              </div>
+              <DocumentActions doc={doc} />
 
               <p className="text-[9px] text-slate-600 text-center">
-                Source: {doc.sourceLabel} · Verify at official institution before submitting.
+                Source: {doc.sourceLabel} · Always verify requirements at the official institution before submitting.
               </p>
             </div>
           </motion.div>
