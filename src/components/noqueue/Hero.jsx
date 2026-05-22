@@ -4,11 +4,11 @@ import { ArrowRight, Play, Building2, Clock, RotateCcw, FileCheck, MapPin } from
 import { Button } from '@/components/ui/button';
 
 const metrics = [
-  { icon: Clock, value: '35 min', label: 'Avg. time saved', color: 'text-primary' },
-  { icon: RotateCcw, value: '68%', label: 'Fewer repeated visits', color: 'text-accent' },
-  { icon: FileCheck, value: '15', label: 'Supported procedures', color: 'text-success' },
-  { icon: MapPin, value: '15', label: 'Cluj institutions', color: 'text-warning' },
-];
+{ icon: Clock, value: '35 min', label: 'Avg. time saved', color: 'text-primary' },
+{ icon: RotateCcw, value: '68%', label: 'Fewer repeated visits', color: 'text-accent' },
+{ icon: FileCheck, value: '15', label: 'Supported procedures', color: 'text-success' },
+{ icon: MapPin, value: '15', label: 'Cluj institutions', color: 'text-warning' }];
+
 
 export default function Hero() {
   return (
@@ -26,11 +26,11 @@ export default function Hero() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-          >
+            transition={{ duration: 0.7 }}>
+            
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
               <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-              <span className="text-xs font-medium text-primary">ClujHackathon2026 — AI Civic Innovation</span>
+              <span className="text-xs font-medium text-primary">ClujHackathon2026</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight">
@@ -66,19 +66,19 @@ export default function Hero() {
 
             {/* Metrics */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-12">
-              {metrics.map((m, i) => (
-                <motion.div
-                  key={m.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + i * 0.1 }}
-                  className="text-center"
-                >
+              {metrics.map((m, i) =>
+              <motion.div
+                key={m.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 + i * 0.1 }}
+                className="text-center">
+                
                   <m.icon className={`w-5 h-5 ${m.color} mx-auto mb-1`} />
                   <div className="text-2xl font-bold text-white">{m.value}</div>
                   <div className="text-xs text-slate-400">{m.label}</div>
                 </motion.div>
-              ))}
+              )}
             </div>
           </motion.div>
 
@@ -87,8 +87,8 @@ export default function Hero() {
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="hidden lg:block"
-          >
+            className="hidden lg:block">
+            
             <div className="animate-float">
               <div className="glass-card rounded-3xl p-6 glow-blue max-w-md mx-auto">
                 <div className="flex items-center gap-2 mb-4">
@@ -126,6 +126,6 @@ export default function Hero() {
           </motion.div>
         </div>
       </div>
-    </section>
-  );
+    </section>);
+
 }
