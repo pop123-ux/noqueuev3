@@ -3,11 +3,11 @@ import { Menu, X, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navLinks = [
-  { label: 'Problems', href: '#problems' },
+  { label: 'Chat', href: '#chat' },
+  { label: 'Documents', href: '#documents' },
   { label: 'Workflows', href: '#workflows' },
   { label: 'Institutions', href: '#institutions' },
   { label: 'Map', href: '#map' },
-  { label: 'Chat', href: '#chat' },
 ];
 
 export default function Navbar() {

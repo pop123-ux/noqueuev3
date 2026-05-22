@@ -75,6 +75,7 @@ export default function NoQueueAIChat({ onWorkflowDetected }) {
       workflowId: response.workflowId,
       institutionId: response.institutionId,
       documents: response.documents,
+      retrievedDocuments: response.retrievedDocuments,
       warnings: response.warnings,
       followUpQuestion: response.followUpQuestion,
       type: response.type,

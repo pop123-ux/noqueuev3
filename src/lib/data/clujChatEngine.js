@@ -1,5 +1,6 @@
 import { clujInstitutions } from './clujInstitutions';
 import workflows from './workflows';
+import { retrieveDocuments } from './civicDocuments';
 
 /**
  * Cluj-Focused Chat Engine
@@ -145,12 +146,16 @@ export function buildClujResponse(message, settings, conversationHistory = [], c
       ? `${tonePrefix}Am identificat: **${workflow.title}** 📋\n\n${workflow.description}\n\n**Documente necesare:**\n${docList}\n\n🏛️ **Instituție recomandată:**\n${inst ? `**${inst.name}**\n📍 ${inst.address}\n⏱️ Coadă estimată: ~${inst.queue.current} minute\n🕐 Cel mai bun moment: ${workflow.bestTime}` : workflow.institution}\n\n${workflow.online ? '🌐 **Disponibil parțial online** — verifică mai întâi.' : '🚶 **Vizită fizică necesară**'}\n\n⚠️ **Greșeala frecventă:** ${workflow.commonMistake}\n\n**Pași următori:**\n${nextStepsList}\n\n⏳ **Timp de procesare:** ${workflow.processingTime}\n\n---\n_⚖️ Verifică cerințele finale la instituție înainte de a depune documentele._`
       : `${tonePrefix}I found the right procedure: **${workflow.title}** 📋\n\n${workflow.description}\n\n**Required documents:**\n${docList}\n\n🏛️ **Recommended institution:**\n${inst ? `**${inst.name}**\n📍 ${inst.address}\n⏱️ Estimated queue: ~${inst.queue.current} minutes\n🕐 Best visiting time: ${workflow.bestTime}` : workflow.institution}\n\n${workflow.online ? '🌐 **Partially available online** — check this first before visiting.' : '🚶 **In-person visit required**'}\n\n⚠️ **Common mistake:** ${workflow.commonMistake}\n\n**Next steps:**\n${nextStepsList}\n\n⏳ **Processing time:** ${workflow.processingTime}\n\n---\n_⚖️ Please verify final requirements with the official institution before submitting._`;
 
+    // Retrieve civic documents for this workflow
+    const retrievedDocs = retrieveDocuments(message, workflow.id);
+
     return {
       reply,
       type: 'workflow-guidance',
       workflowId: workflow.id,
       institutionId: inst?.id || workflow.institutionId,
       documents: workflow.documents,
+      retrievedDocuments: retrievedDocs,
       queueEstimate: inst?.queue.current || workflow.queue,
       warnings: [workflow.commonMistake],
       bestVisitTime: workflow.bestTime,

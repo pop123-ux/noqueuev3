@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { CheckCircle2, Circle, AlertTriangle, Globe, Clock, MapPin, ChevronDown, ChevronUp, Building2, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Circle, AlertTriangle, Globe, Clock, MapPin, ChevronDown, ChevronUp, Building2, ArrowRight, FileText } from 'lucide-react';
 import { clujInstitutions, getQueueStatus } from '@/lib/data/clujInstitutions';
 import workflows from '@/lib/data/workflows';
+import DocumentCard from '@/components/noqueue/documents/DocumentCard';
 
 function InstitutionCard({ institutionId }) {
   const inst = clujInstitutions.find(i => i.id === institutionId);
@@ -167,6 +168,20 @@ export default function MessageBubble({ message, largerText = false }) {
             {message.followUpQuestion && (
               <div className="mt-2 px-3 py-2 rounded-xl bg-primary/8 border border-primary/20 text-xs text-primary italic">
                 💬 {message.followUpQuestion}
+              </div>
+            )}
+            {message.retrievedDocuments?.length > 0 && (
+              <div className="mt-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <FileText className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-semibold text-slate-300">Official Forms Retrieved</span>
+                  <span className="text-[10px] text-slate-500">({message.retrievedDocuments.length})</span>
+                </div>
+                <div className="space-y-2">
+                  {message.retrievedDocuments.slice(0, 3).map(doc => (
+                    <DocumentCard key={doc.id} doc={doc} compact />
+                  ))}
+                </div>
               </div>
             )}
           </>
