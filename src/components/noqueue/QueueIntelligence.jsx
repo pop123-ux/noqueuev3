@@ -1,54 +1,29 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Clock, TrendingUp, TrendingDown, Minus, Users } from 'lucide-react';
+import { Clock, TrendingUp, TrendingDown, Minus, Users, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import institutions from '@/lib/data/institutions';
+import { clujInstitutions, getQueueStatus } from '@/lib/data/clujInstitutions';
 
-const queueTrends = {
-  'dep-cluj': 'stable',
-  'pasapoarte-cluj': 'rising',
-  'drpciv-cluj': 'rising',
-  'primaria-cluj': 'falling',
-  'taxe-locale': 'stable',
-  'anaf-cluj': 'rising',
-  'cas-cluj': 'stable',
-  'ipj-cluj': 'falling',
-  'starea-civila': 'stable',
-  'asistenta-sociala': 'rising',
-  'reg-comert': 'stable',
-  'ocpi-cluj': 'rising',
-  'apa-somes': 'falling',
-  'electrica': 'stable',
-  'ctp-cluj': 'falling',
-};
-
-const trendIcons = {
+const trendConfig = {
   rising: { icon: TrendingUp, color: 'text-destructive', label: 'Rising' },
   stable: { icon: Minus, color: 'text-warning', label: 'Stable' },
   falling: { icon: TrendingDown, color: 'text-success', label: 'Falling' },
 };
 
-const crowdBg = {
-  low: 'bg-success/10 text-success',
-  medium: 'bg-warning/10 text-warning',
-  high: 'bg-destructive/10 text-destructive',
-};
-
-// Synthetic hourly data
 const hourlyData = [
-  { hour: '08:00', level: 30 },
-  { hour: '09:00', level: 70 },
-  { hour: '10:00', level: 90 },
-  { hour: '11:00', level: 85 },
-  { hour: '12:00', level: 50 },
-  { hour: '13:00', level: 40 },
-  { hour: '14:00', level: 55 },
-  { hour: '15:00', level: 35 },
-  { hour: '16:00', level: 20 },
+  { hour: '08:00', level: 28 },
+  { hour: '09:00', level: 72 },
+  { hour: '10:00', level: 92 },
+  { hour: '11:00', level: 88 },
+  { hour: '12:00', level: 52 },
+  { hour: '13:00', level: 38 },
+  { hour: '14:00', level: 58 },
+  { hour: '15:00', level: 32 },
+  { hour: '16:00', level: 18 },
 ];
 
 export default function QueueIntelligence() {
-  const sorted = [...institutions].sort((a, b) => a.queue - b.queue);
+  const sorted = [...clujInstitutions].sort((a, b) => a.queue.current - b.queue.current);
 
   return (
     <section className="py-20 sm:py-28">
@@ -59,70 +34,106 @@ export default function QueueIntelligence() {
           viewport={{ once: true }}
           className="text-center mb-10"
         >
-          <span className="text-xs font-semibold uppercase tracking-wider text-warning">Real-time data</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-warning">Simulated data</span>
           <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-white">Queue Intelligence</h2>
           <p className="mt-3 text-slate-400 max-w-xl mx-auto">
-            Synthetic queue data showing estimated wait times, crowd levels, and trends.
+            Synthetic wait time simulation across all Cluj-Napoca civic offices.
           </p>
         </motion.div>
 
-        {/* Hourly chart */}
-        <div className="glass-card rounded-3xl p-6 mb-8 max-w-2xl mx-auto">
-          <h3 className="text-sm font-semibold text-white mb-4">Average Crowd Level Today</h3>
-          <div className="flex items-end gap-2 h-32">
-            {hourlyData.map(h => {
-              const height = `${h.level}%`;
-              const color = h.level > 75 ? 'bg-destructive' : h.level > 45 ? 'bg-warning' : 'bg-success';
-              return (
-                <div key={h.hour} className="flex-1 flex flex-col items-center gap-1">
-                  <div className="w-full relative flex items-end" style={{ height: '100px' }}>
-                    <div
-                      className={`w-full ${color} rounded-t-md transition-all`}
-                      style={{ height }}
-                    />
+        <div className="grid lg:grid-cols-3 gap-6 mb-8">
+          {/* Hourly chart */}
+          <div className="lg:col-span-2 glass-card rounded-3xl p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-sm font-semibold text-white">Average Crowd Level Today</h3>
+              <div className="flex items-center gap-1.5 text-xs text-success">
+                <Zap className="w-3.5 h-3.5" />
+                <span>Best: 08:00, 13:00, 15:00+</span>
+              </div>
+            </div>
+            <div className="flex items-end gap-2" style={{ height: '100px' }}>
+              {hourlyData.map(h => {
+                const color = h.level > 75 ? '#ef4444' : h.level > 45 ? '#facc15' : '#22c55e';
+                const heightPct = `${h.level}%`;
+                return (
+                  <div key={h.hour} className="flex-1 flex flex-col items-center gap-1" style={{ height: '100%' }}>
+                    <div className="w-full flex items-end" style={{ height: 'calc(100% - 16px)' }}>
+                      <motion.div
+                        className="w-full rounded-t-md"
+                        style={{ height: heightPct, backgroundColor: color }}
+                        initial={{ height: 0 }}
+                        whileInView={{ height: heightPct }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: hourlyData.findIndex(x => x.hour === h.hour) * 0.05 }}
+                      />
+                    </div>
+                    <span className="text-[9px] text-slate-500">{h.hour.split(':')[0]}</span>
                   </div>
-                  <span className="text-[9px] text-slate-500">{h.hour}</span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-          <p className="text-xs text-slate-500 mt-3 text-center">
-            Best times: 08:00, 12:00–13:00, and after 15:00
-          </p>
+
+          {/* Quick stats */}
+          <div className="space-y-3">
+            {[
+              { label: 'Lowest queue now', inst: sorted[0], color: 'text-success' },
+              { label: 'Busiest right now', inst: sorted[sorted.length - 1], color: 'text-destructive' },
+            ].map(({ label, inst, color }) => (
+              <div key={label} className="glass-card rounded-2xl p-4">
+                <p className="text-xs text-slate-400 mb-1">{label}</p>
+                <p className="text-sm font-semibold text-white leading-tight">{inst.name}</p>
+                <div className={`text-xl font-bold mt-1 ${color}`}>~{inst.queue.current} min</div>
+              </div>
+            ))}
+            <div className="glass-card rounded-2xl p-4">
+              <p className="text-xs text-slate-400 mb-1">Avg across all offices</p>
+              <div className="text-xl font-bold text-primary">
+                ~{Math.round(clujInstitutions.reduce((s, i) => s + i.queue.current, 0) / clujInstitutions.length)} min
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Queue table */}
+        {/* Table */}
         <div className="glass-card rounded-3xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/5">
                   <th className="text-left py-3 px-4 text-xs font-medium text-slate-400">Institution</th>
-                  <th className="text-center py-3 px-4 text-xs font-medium text-slate-400">Queue</th>
-                  <th className="text-center py-3 px-4 text-xs font-medium text-slate-400">Crowd</th>
+                  <th className="text-center py-3 px-4 text-xs font-medium text-slate-400 hidden sm:table-cell">Category</th>
+                  <th className="text-center py-3 px-4 text-xs font-medium text-slate-400">Wait</th>
+                  <th className="text-center py-3 px-4 text-xs font-medium text-slate-400">Status</th>
                   <th className="text-center py-3 px-4 text-xs font-medium text-slate-400">Trend</th>
-                  <th className="text-right py-3 px-4 text-xs font-medium text-slate-400 hidden sm:table-cell">Best Time</th>
                 </tr>
               </thead>
               <tbody>
-                {sorted.slice(0, 10).map(inst => {
-                  const trend = trendIcons[queueTrends[inst.id] || 'stable'];
+                {sorted.map(inst => {
+                  const status = getQueueStatus(inst.queue);
+                  const trend = trendConfig[inst.queue.trend] || trendConfig.stable;
                   const TrendIcon = trend.icon;
                   return (
                     <tr key={inst.id} className="border-b border-white/5 hover:bg-white/[0.02]">
                       <td className="py-3 px-4">
-                        <span className="text-xs font-medium text-white">{inst.name}</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: inst.color }} />
+                          <span className="text-xs font-medium text-white">{inst.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-center hidden sm:table-cell">
+                        <span className="text-xs text-slate-400">{inst.categoryLabel}</span>
                       </td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <Clock className="w-3 h-3 text-primary" />
-                          <span className="text-xs text-slate-300">{inst.queue} min</span>
+                          <span className="text-xs font-semibold text-white">{inst.queue.current}m</span>
                         </div>
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <Badge className={`text-[10px] ${crowdBg[inst.crowd]}`}>
-                          {inst.crowd}
-                        </Badge>
+                        <span className="text-xs font-medium" style={{ color: status.color }}>
+                          {status.label}
+                        </span>
                       </td>
                       <td className="py-3 px-4 text-center">
                         <div className={`flex items-center justify-center gap-1 ${trend.color}`}>
@@ -130,14 +141,16 @@ export default function QueueIntelligence() {
                           <span className="text-[10px]">{trend.label}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-right hidden sm:table-cell">
-                        <span className="text-xs text-slate-400">{inst.bestTime}</span>
-                      </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
+          </div>
+          <div className="px-4 py-3 border-t border-white/5">
+            <p className="text-[10px] text-slate-600 text-center">
+              Simulated data for hackathon demo · Real-time integration ready via Google Places + crowd-reporting API
+            </p>
           </div>
         </div>
       </div>
