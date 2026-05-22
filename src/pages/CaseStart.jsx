@@ -8,12 +8,16 @@ import { Link } from 'react-router-dom';
 import {
   Sparkles, ArrowRight, Globe, MapPin, Clock, AlertTriangle,
   CheckCircle2, Loader2, ChevronRight, FileText, BookmarkPlus,
-  X, Zap, Building2, Info
+  X, Zap, Building2, Info, FileOutput, User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 import { classifyIntake } from '@/lib/data/intakeEngine';
 import ReactMarkdown from 'react-markdown';
+import { routeDocuments } from '@/lib/documents/documentRouter';
+import { generateDocumentsForCase } from '@/lib/documents/documentGenerationService';
+import GeneratedDocumentCard from '@/components/documents/GeneratedDocumentCard';
+import ProfileCompletenessCard from '@/components/profile/ProfileCompletenessCard';
 
 const QUICK_STARTS = [
   { label: 'Renew ID card', emoji: '🪪', query: 'I need to renew my ID card' },
@@ -182,9 +186,22 @@ export default function CaseStart() {
   const [savedCaseId, setSavedCaseId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [generatingDocs, setGeneratingDocs] = useState(false);
+  const [generatedDocs, setGeneratedDocs] = useState([]);
+  const [profile, setProfile] = useState(null);
   const inputRef = useRef(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
+
+  // Load profile silently
+  useEffect(() => {
+    base44.auth.me().then(user => {
+      if (!user?.email) return;
+      base44.entities.UserPrivateProfile.filter({ user_id: user.email }, '-created_date', 1)
+        .then(profiles => setProfile(profiles?.[0] || null))
+        .catch(() => {});
+    }).catch(() => {});
+  }, []);
 
   const classify = async (query) => {
     const q = query || input.trim();
@@ -220,6 +237,27 @@ export default function CaseStart() {
     });
     setSavedCaseId(newCase.id);
     setSaving(false);
+    return newCase;
+  };
+
+  const handleGenerateDocs = async () => {
+    setGeneratingDocs(true);
+    setGeneratedDocs([]);
+    let caseId = savedCaseId;
+    if (!caseId) {
+      const cas = await saveCase();
+      caseId = cas?.id;
+    }
+    const routerResult = await routeDocuments(input, result?.procedure_key, profile);
+    if (routerResult.documents.length > 0) {
+      const docs = await generateDocumentsForCase({
+        routerResult,
+        profile,
+        caseId,
+      });
+      setGeneratedDocs(docs);
+    }
+    setGeneratingDocs(false);
   };
 
   return (
@@ -341,27 +379,63 @@ export default function CaseStart() {
           )}
         </AnimatePresence>
 
-        {/* Case saved confirmation */}
+        {/* Case saved confirmation + Generate CTA */}
         <AnimatePresence>
           {savedCaseId && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4 rounded-2xl bg-success/10 border border-success/30 p-4 flex items-center justify-between"
-            >
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-success" />
-                <span className="text-sm text-white font-medium">Case saved successfully</span>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 space-y-3">
+              <div className="rounded-2xl bg-success/10 border border-success/30 p-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                  <span className="text-sm text-white font-medium">Case saved successfully</span>
+                </div>
+                <Link to="/cases" className="flex items-center gap-1 text-xs text-success hover:text-success/80 transition-colors">
+                  View cases <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
-              <Link
-                to="/cases"
-                className="flex items-center gap-1 text-xs text-success hover:text-success/80 transition-colors"
-              >
-                View cases <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
+
+              {generatedDocs.length === 0 && (
+                <Button
+                  onClick={handleGenerateDocs}
+                  disabled={generatingDocs}
+                  className="w-full bg-accent/20 hover:bg-accent/30 text-accent border border-accent/30 rounded-xl h-11"
+                >
+                  {generatingDocs ? (
+                    <><Loader2 className="w-4 h-4 animate-spin mr-2" />Generating documents…</>
+                  ) : (
+                    <><FileOutput className="w-4 h-4 mr-2" />Generate Documents for this Case</>
+                  )}
+                </Button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Generated documents */}
+        <AnimatePresence>
+          {generatedDocs.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-6 space-y-3">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-accent" />
+                  {generatedDocs.length} Document{generatedDocs.length !== 1 ? 's' : ''} Generated
+                </h3>
+                <Link to="/cases" className="text-xs text-primary hover:text-primary/80">
+                  View in My Cases →
+                </Link>
+              </div>
+              {generatedDocs.map(doc => (
+                <GeneratedDocumentCard key={doc.id} doc={doc} currentProfile={profile} />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Profile completeness hint if missing */}
+        {result && !profile?.first_name && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
+            <ProfileCompletenessCard profile={profile} compact />
+          </motion.div>
+        )}
       </div>
     </div>
   );

@@ -9,10 +9,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Zap, Plus, ChevronRight, Globe, MapPin, Clock, CheckCircle2,
   Circle, AlertTriangle, Loader2, Trash2, FileText, Building2,
-  ArrowUpRight, Edit3, X, BarChart2
+  ArrowUpRight, Edit3, X, BarChart2, User, FileOutput
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
+import GeneratedDocumentsPanel from '@/components/documents/GeneratedDocumentsPanel';
 
 const STATUS_CONFIG = {
   open: { label: 'Open', color: 'text-primary', bg: 'bg-primary/10', icon: Circle },
@@ -34,8 +35,9 @@ const URGENCY_COLORS = {
   critical: 'text-destructive',
 };
 
-function CaseCard({ cas, onUpdateStatus, onDelete }) {
+function CaseCard({ cas, onUpdateStatus, onDelete, currentProfile }) {
   const [expanded, setExpanded] = useState(false);
+  const [showDocs, setShowDocs] = useState(false);
   const status = STATUS_CONFIG[cas.status] || STATUS_CONFIG.open;
   const channel = CHANNEL_LABELS[cas.channel] || CHANNEL_LABELS['walk-in'];
   const StatusIcon = status.icon;
@@ -179,6 +181,28 @@ function CaseCard({ cas, onUpdateStatus, onDelete }) {
                 <p className="text-[10px] text-slate-600 italic">"{cas.user_description}"</p>
               )}
 
+              {/* Generated documents toggle */}
+              <button
+                onClick={() => setShowDocs(!showDocs)}
+                className="w-full flex items-center justify-between py-2 px-3 rounded-xl bg-white/[0.03] border border-white/8 hover:border-primary/30 transition-all"
+              >
+                <span className="flex items-center gap-2 text-xs text-slate-400">
+                  <FileOutput className="w-3.5 h-3.5 text-accent" />
+                  Generated documents
+                </span>
+                <ChevronRight className={`w-3.5 h-3.5 text-slate-500 transition-transform ${showDocs ? 'rotate-90' : ''}`} />
+              </button>
+
+              {showDocs && (
+                <div className="mt-1">
+                  <GeneratedDocumentsPanel
+                    caseId={cas.id}
+                    procedureKey={cas.procedure_key}
+                    currentProfile={currentProfile}
+                  />
+                </div>
+              )}
+
               {/* Status controls */}
               <div className="flex flex-wrap gap-2 pt-1">
                 {['open', 'in-progress', 'completed', 'blocked'].map(s => (
@@ -212,6 +236,16 @@ export default function Cases() {
     queryFn: () => base44.entities.Case.list('-created_date', 50),
   });
 
+  const { data: profiles = [] } = useQuery({
+    queryKey: ['profile-cases'],
+    queryFn: async () => {
+      const user = await base44.auth.me();
+      if (!user?.email) return [];
+      return base44.entities.UserPrivateProfile.filter({ user_id: user.email }, '-created_date', 1);
+    },
+  });
+  const currentProfile = profiles[0] || null;
+
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Case.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cases'] }),
@@ -241,12 +275,18 @@ export default function Cases() {
           </div>
           <span className="text-sm font-bold text-white">NoQueue AI</span>
         </Link>
-        <Link to="/start">
-          <Button size="sm" className="bg-primary hover:bg-primary/90 rounded-xl">
-            <Plus className="w-4 h-4 mr-1.5" />
-            New Case
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to="/profile" className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors px-2 py-1.5 rounded-lg hover:bg-white/5">
+            <User className="w-3.5 h-3.5" />
+            Profile
+          </Link>
+          <Link to="/start">
+            <Button size="sm" className="bg-primary hover:bg-primary/90 rounded-xl">
+              <Plus className="w-4 h-4 mr-1.5" />
+              New Case
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-8">
@@ -316,6 +356,7 @@ export default function Cases() {
                   cas={cas}
                   onUpdateStatus={(id, data) => updateMutation.mutate({ id, data })}
                   onDelete={(id) => deleteMutation.mutate(id)}
+                  currentProfile={currentProfile}
                 />
               ))}
             </AnimatePresence>
