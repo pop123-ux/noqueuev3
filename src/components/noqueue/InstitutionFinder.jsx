@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, MapPin, Clock, Globe, Users, Award, AlertCircle } from 'lucide-react';
+import { Search, MapPin, Clock, Globe, Users, Award, AlertCircle, ExternalLink } from 'lucide-react';
+
+function openInGoogleMaps(address) {
+  const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { clujInstitutions, getQueueStatus } from '@/lib/data/clujInstitutions';
@@ -91,10 +96,13 @@ function InstitutionCard({ inst, isBest, onClick }) {
               ⚠️ {inst.commonMistake}
             </div>
             <button
-              onClick={(e) => { e.stopPropagation(); onClick?.(inst); }}
-              className="w-full py-2 rounded-xl bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+              onClick={(e) => { e.stopPropagation(); openInGoogleMaps(inst.address); }}
+              aria-label="Open institution location in Google Maps"
+              title="Open external navigation"
+              className="w-full py-2 rounded-xl bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 active:scale-95 transition-all flex items-center justify-center gap-1.5"
             >
-              View on map →
+              <ExternalLink className="w-3.5 h-3.5" />
+              Open in Google Maps
             </button>
           </div>
         )}
