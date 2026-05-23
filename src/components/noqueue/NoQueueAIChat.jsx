@@ -3,14 +3,17 @@
  */
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, RefreshCw } from 'lucide-react';
-import { routeByQuickAction, routeByText, detectSpecialIntent } from '@/lib/assistant/procedureRouter';
+import { Zap, RefreshCw, AlertTriangle } from 'lucide-react';
+import {
+  routeByQuickAction, routeByText, detectSpecialIntent, detectPassportIntent
+} from '@/lib/assistant/procedureRouter';
 import { clujInstitutions } from '@/lib/data/clujInstitutions';
 import { base44 } from '@/api/base44Client';
 import ProcedureResultCard from '@/components/assistant/ProcedureResultCard';
 import QuickActionCarousel from '@/components/assistant/QuickActionCarousel';
 import VoiceInputButton from '@/components/assistant/VoiceInputButton';
 import PipelineProgress from '@/components/assistant/PipelineProgress';
+import PassportWorkspace from '@/components/passport/PassportWorkspace';
 import workflows from '@/lib/data/workflows';
 
 // Queue overview card
@@ -75,8 +78,13 @@ function LLMResultCard({ result }) {
   );
 }
 
-// Welcome state
-function WelcomeState({ onVoice }) {
+// Welcome state — fully clickable example chips (accessible, keyboard-friendly)
+function WelcomeState({ onExample }) {
+  const EXAMPLES = [
+    'Am nevoie de pașaport urgent',
+    'Mi-am pierdut buletinul',
+    'Reînnoire permis auto',
+  ];
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -89,19 +97,25 @@ function WelcomeState({ onVoice }) {
         </div>
         <h3 className="text-lg font-bold text-white mb-1">NoQueue AI</h3>
         <p className="text-xs text-slate-400 max-w-xs">
-          Descrie ce procedura ai nevoie. Primesti instant pachetul complet: documente, institutie, pasi.
+          Descrie ce procedură ai nevoie. Primești instant pachetul complet: documente, instituție, pași.
         </p>
       </div>
       <div className="w-full max-w-xs space-y-2">
-        <p className="text-[10px] text-slate-500 text-center uppercase tracking-wider font-semibold">Incerca</p>
-        {['"Am nevoie de pasaport urgent"', '"Mi-am pierdut buletinul"', '"Reinnoire permis auto"'].map(ex => (
+        <p className="text-[10px] text-slate-500 text-center uppercase tracking-wider font-semibold">Încearcă</p>
+        {EXAMPLES.map(ex => (
           <button
             key={ex}
-            onClick={() => onVoice(ex.replace(/"/g, ''))}
-            className="w-full text-left px-4 py-2.5 rounded-xl text-xs text-slate-300 hover:text-white transition-all"
+            type="button"
+            role="button"
+            tabIndex={0}
+            onClick={() => onExample(ex)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onExample(ex); }
+            }}
+            className="w-full text-left px-4 py-2.5 rounded-xl text-xs text-slate-300 hover:text-white hover:border-primary/40 active:scale-[0.99] transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
             style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
           >
-            {ex}
+            "{ex}"
           </button>
         ))}
       </div>
@@ -109,13 +123,46 @@ function WelcomeState({ onVoice }) {
   );
 }
 
+// Passport result — renders the existing Export PDF Draft workspace inline
+function PassportResultCard({ intent, profile }) {
+  const isUrgent = intent?.urgency === 'urgent';
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="p-4 space-y-3">
+      {/* Urgent banner */}
+      {isUrgent && (
+        <div
+          className="flex items-center gap-2 px-3 py-2 rounded-xl"
+          style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.25)' }}
+        >
+          <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />
+          <span className="text-[11px] font-semibold text-warning uppercase tracking-wider">Urgent request</span>
+          <span className="text-[10px] text-slate-400">· Draft pasaport pregătit din Seif & My Cases</span>
+        </div>
+      )}
+      <PassportWorkspace profile={profile} caseData={{ urgency: intent?.urgency || 'normal' }} />
+    </motion.div>
+  );
+}
+
 export default function NoQueueAIChat({ onWorkflowDetected }) {
-  const [result, setResult] = useState(null); // { type: 'workflow'|'queue'|'llm', ... }
+  const [result, setResult] = useState(null); // { type: 'workflow'|'queue'|'llm'|'passport', ... }
   const [loading, setLoading] = useState(false);
   const [pipelineStep, setPipelineStep] = useState(0);
   const [input, setInput] = useState('');
+  const [profile, setProfile] = useState(null);
   const inputRef = useRef(null);
   const resultRef = useRef(null);
+
+  // Silently load profile so the passport flow has Seif data ready on first click
+  useEffect(() => {
+    base44.auth.me().then(user => {
+      if (!user?.email) return;
+      base44.entities.UserPrivateProfile
+        .filter({ user_id: user.email }, '-created_date', 1)
+        .then(profiles => setProfile(profiles?.[0] || null))
+        .catch(() => {});
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (result) {
@@ -124,6 +171,17 @@ export default function NoQueueAIChat({ onWorkflowDetected }) {
   }, [result]);
 
   const advanceStep = (step, delay = 500) => new Promise(r => setTimeout(() => { setPipelineStep(step); r(); }, delay));
+
+  // Centralized passport launch — used by both the suggestion chip and the "Pașaport" quick action
+  const launchPassport = async (text) => {
+    const passportIntent = detectPassportIntent(text) || { intent: 'passport_urgent', baseIntent: 'passport_renewal', urgency: 'urgent', confidence: 0.98 };
+    await advanceStep(1, 350);
+    await advanceStep(2, 350);
+    await advanceStep(3, 300);
+    setResult({ type: 'passport', intent: passportIntent });
+    onWorkflowDetected?.({ workflowId: 'passport-renewal' });
+    setLoading(false);
+  };
 
   const launch = async (actionId = null, text = null) => {
     setLoading(true);
@@ -139,6 +197,11 @@ export default function NoQueueAIChat({ onWorkflowDetected }) {
         setResult({ type: 'queue' });
         return;
       }
+      // Passport quick action → launch the existing Export PDF Draft workspace
+      if (actionId === 'passport') {
+        await launchPassport('Am nevoie de pașaport urgent');
+        return;
+      }
       const workflow = routeByQuickAction(actionId);
       if (workflow) {
         await advanceStep(1, 350);
@@ -152,6 +215,13 @@ export default function NoQueueAIChat({ onWorkflowDetected }) {
     }
 
     if (text) {
+      // Passport intent → Export PDF Draft workspace (priority over generic workflow card)
+      const passportIntent = detectPassportIntent(text);
+      if (passportIntent) {
+        await launchPassport(text);
+        return;
+      }
+
       const special = detectSpecialIntent(text);
       if (special === 'queue-overview') {
         setLoading(false);
@@ -286,10 +356,11 @@ Daca cererea se incadreaza intr-una din proceduri, mentioneaza-o clar.`,
                   {result.type === 'workflow' && <div className="p-4"><ProcedureResultCard workflow={result.workflow} /></div>}
                   {result.type === 'queue' && <QueueOverviewCard />}
                   {result.type === 'llm' && <LLMResultCard result={result.data} />}
+                  {result.type === 'passport' && <PassportResultCard intent={result.intent} profile={profile} />}
                 </motion.div>
               ) : (
                 <motion.div key="welcome" className="flex-1">
-                  <WelcomeState onVoice={(t) => { setInput(t); launch(null, t); }} />
+                  <WelcomeState onExample={(t) => { setInput(t); launch(null, t); }} />
                 </motion.div>
               )}
             </AnimatePresence>

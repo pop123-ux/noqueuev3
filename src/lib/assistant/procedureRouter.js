@@ -48,9 +48,20 @@ const SYNONYMS = {
   'renew passport': 'passport-renewal',
   'new passport': 'passport-renewal',
   'pasaport nou': 'passport-renewal',
-  'urgent passport': 'temp-passport',
-  'pasaport urgent': 'temp-passport',
-  'pasaport de urgenta': 'temp-passport',
+  // Urgent passport intent → route to passport-renewal (PassportWorkspace handles urgent draft)
+  // The workspace already passes { isUrgent: true } to the PDF exporter, so urgent and standard
+  // share the same Export PDF Draft pipeline — the UI shows an "Urgent request" badge.
+  'urgent passport': 'passport-renewal',
+  'pasaport urgent': 'passport-renewal',
+  'pașaport urgent': 'passport-renewal',
+  'pasaport de urgenta': 'passport-renewal',
+  'pașaport de urgență': 'passport-renewal',
+  'am nevoie de pasaport': 'passport-renewal',
+  'am nevoie de pașaport': 'passport-renewal',
+  'vreau pasaport': 'passport-renewal',
+  'vreau pașaport': 'passport-renewal',
+  'i need a passport': 'passport-renewal',
+  // True loss/theft → temp passport
   'pierdut pasaportul': 'temp-passport',
   'pierdut pasaport': 'temp-passport',
   'furat pasaport': 'temp-passport',
@@ -129,4 +140,30 @@ export function detectSpecialIntent(text) {
   if (/queue|shortest|wait|coadă|fastest/i.test(lower)) return 'queue-overview';
   if (/online|digital|internet|virtual/i.test(lower)) return 'online-overview';
   return null;
+}
+
+/**
+ * Detect passport intent + urgency for the NoQueue AI → PassportWorkspace bridge.
+ * Returns null if the text is not a passport request.
+ * Returns { intent, baseIntent, urgency, confidence } when a passport flow is detected.
+ *
+ * This is the single source of truth for routing "Am nevoie de pașaport urgent" and
+ * its variants directly to the existing My Cases → Export PDF Draft (PassportWorkspace).
+ */
+export function detectPassportIntent(text) {
+  if (!text) return null;
+  const lower = text.toLowerCase();
+  const hasPassport = /pasaport|pașaport|passport/.test(lower);
+  if (!hasPassport) return null;
+
+  // Loss/theft → not handled here (temp-passport flow)
+  if (/pierdut|furat|lost|stolen/.test(lower)) return null;
+
+  const isUrgent = /urgent|urgență|urgenta|emergency|urgently/.test(lower);
+  return {
+    intent: isUrgent ? 'passport_urgent' : 'passport_renewal',
+    baseIntent: 'passport_renewal',
+    urgency: isUrgent ? 'urgent' : 'normal',
+    confidence: 0.98,
+  };
 }
