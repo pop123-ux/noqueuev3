@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Zap, Briefcase, User, Shield, FolderOpen, Globe2, FileSearch } from 'lucide-react';
+import { Menu, X, Zap, Briefcase, User, Shield, FolderOpen, Globe2, FileSearch, Sparkles, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navLinks = [
@@ -34,6 +34,14 @@ export default function Navbar() {
                 {link.label}
               </a>
             ))}
+            <Link to="/os" className="px-3 py-2 text-sm text-white font-semibold transition-colors rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary/20 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-primary" />
+              <span className="text-primary">OS</span>
+            </Link>
+            <Link to="/life-events" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" />
+              Life Events
+            </Link>
             <Link to="/cases" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
               <Briefcase className="w-3.5 h-3.5" />
               My Cases
@@ -89,6 +97,12 @@ export default function Navbar() {
               {link.label}
             </a>
           ))}
+          <Link to="/os" onClick={() => setOpen(false)} className="block py-3 text-sm text-primary font-semibold border-b border-white/5">
+            🟦 NoQueue OS
+          </Link>
+          <Link to="/life-events" onClick={() => setOpen(false)} className="block py-3 text-sm text-slate-300 hover:text-white border-b border-white/5">
+            ✨ Life Events
+          </Link>
           <Link to="/cases" onClick={() => setOpen(false)} className="block py-3 text-sm text-slate-300 hover:text-white border-b border-white/5">
             My Cases
           </Link>

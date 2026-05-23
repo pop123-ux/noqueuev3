@@ -20,6 +20,9 @@ import MoveToRomania from './pages/MoveToRomania';
 import SmartDocAnalyzer from './pages/SmartDocAnalyzer';
 import IdentityOnboarding from './pages/IdentityOnboarding';
 import CivicCopilot from './pages/CivicCopilot';
+import LifeEvents from './pages/LifeEvents.jsx';
+import NoQueueOS from './pages/NoQueueOS.jsx';
+import RunDemo from './pages/RunDemo.jsx';
 // TODO: re-enable for production — OnboardingGate is intentionally bypassed in DEMO MODE.
 // import OnboardingGate from './components/auth/OnboardingGate';
 // Add page imports here
@@ -88,6 +91,9 @@ const AuthenticatedApp = () => {
       <Route path="/smart-doc" element={<SmartDocAnalyzer />} />
       <Route path="/identity-onboarding" element={<IdentityOnboarding />} />
       <Route path="/copilot" element={<CivicCopilot />} />
+      <Route path="/life-events" element={<LifeEvents />} />
+      <Route path="/os" element={<NoQueueOS />} />
+      <Route path="/run-demo" element={<RunDemo />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

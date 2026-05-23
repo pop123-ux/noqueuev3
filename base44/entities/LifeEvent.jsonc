@@ -1,0 +1,70 @@
+{
+  "name": "LifeEvent",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "event_key": {
+      "type": "string",
+      "description": "Stable identifier (e.g. lost-id, moved, new-child)"
+    },
+    "event_title": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "identity",
+        "family",
+        "housing",
+        "work",
+        "health",
+        "education",
+        "business",
+        "civic"
+      ],
+      "default": "civic"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "selected",
+        "in_progress",
+        "completed",
+        "dismissed"
+      ],
+      "default": "selected"
+    },
+    "progress_pct": {
+      "type": "number",
+      "default": 0
+    },
+    "linked_workflow_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "linked_case_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "estimated_time_saved_min": {
+      "type": "number",
+      "default": 0
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "event_key",
+    "event_title"
+  ]
+}

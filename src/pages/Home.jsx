@@ -17,6 +17,7 @@ import MoveToRomaniaDashboardCard from '@/components/moveToRomania/MoveToRomania
 import SmartDocFeatureCard from '@/components/noqueue/SmartDocFeatureCard';
 import CivicCopilotFeatureCard from '@/components/noqueue/CivicCopilotFeatureCard';
 import AnticipatoryDashboard from '@/components/anticipatory/AnticipatoryDashboard';
+import CivicOsHeroStrip from '@/components/civic/CivicOsHeroStrip';
 import Footer from '@/components/noqueue/Footer';
 
 export default function Home() {
@@ -52,6 +53,7 @@ export default function Home() {
     <div className="min-h-screen bg-background text-foreground font-inter">
       <Navbar />
       <Hero />
+      <CivicOsHeroStrip />
       <ProblemCards />
 
       {/* AI Chat — main experience */}

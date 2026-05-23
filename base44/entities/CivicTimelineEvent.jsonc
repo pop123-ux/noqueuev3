@@ -1,0 +1,61 @@
+{
+  "name": "CivicTimelineEvent",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "identity_verified",
+        "life_event_started",
+        "life_event_completed",
+        "case_created",
+        "case_completed",
+        "document_uploaded",
+        "document_generated",
+        "signature_approved",
+        "institution_selected",
+        "queue_estimated",
+        "form_exported",
+        "demo_run"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "icon_key": {
+      "type": "string"
+    },
+    "actor": {
+      "type": "string",
+      "description": "Who performed the action \u2014 usually the user email or 'noqueue_ai'"
+    },
+    "source": {
+      "type": "string",
+      "description": "Module/page that produced the entry"
+    },
+    "resource_type": {
+      "type": "string"
+    },
+    "resource_id": {
+      "type": "string"
+    },
+    "action_hash": {
+      "type": "string",
+      "description": "Pseudo-immutable hash (UI simulation, not cryptographic)"
+    },
+    "prev_hash": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "event_type",
+    "title"
+  ]
+}
