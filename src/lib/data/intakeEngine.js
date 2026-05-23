@@ -6,6 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { clujInstitutions } from './clujInstitutions';
 import workflows from './workflows';
 import { retrieveDocuments } from './civicDocuments';
+import { CLUJ_PROCEDURES } from '@/lib/rag/clujProcedureKnowledge';
 
 // Build a compact context snapshot for the AI
 function buildContextSummary() {
@@ -17,11 +18,16 @@ function buildContextSummary() {
     `${w.id}: ${w.title} | institution: ${w.institutionId} | online: ${!!w.online} | docs: ${w.documents.slice(0, 3).join(', ')}`
   ).join('\n');
 
-  return { institutionSummary, workflowSummary };
+  // Enrich with official Cluj procedure knowledge
+  const procedureSummary = CLUJ_PROCEDURES.slice(0, 10).map(p =>
+    `${p.id}: ${p.title} | institution: ${p.institutionId} | online: ${p.onlineAvailable} | workflowType: ${p.workflowType} | onlineUrl: ${p.onlineUrl || 'N/A'}`
+  ).join('\n');
+
+  return { institutionSummary, workflowSummary, procedureSummary };
 }
 
 export async function classifyIntake(userMessage, conversationHistory = []) {
-  const { institutionSummary, workflowSummary } = buildContextSummary();
+  const { institutionSummary, workflowSummary, procedureSummary } = buildContextSummary();
 
   const historyContext = conversationHistory.slice(-4).map(m =>
     `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content?.slice(0, 200)}`
@@ -35,6 +41,9 @@ ${institutionSummary}
 
 Available workflows:
 ${workflowSummary}
+
+Official Cluj procedures (with real government data):
+${procedureSummary}
 
 Recent conversation:
 ${historyContext || '(none)'}
