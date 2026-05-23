@@ -52,11 +52,14 @@ export function buildOtpAuthUri({ secret, accountName, issuer = 'NoQueue AI' }) 
 
 /** Compute the 6-digit TOTP for a given secret + timestamp (ms). */
 export async function generateTotp(secret, timestampMs = Date.now(), period = 30, digits = 6) {
-  const counter = Math.floor(timestampMs / 1000 / period);
-  const counterBytes = new ArrayBuffer(8);
-  const view = new DataView(counterBytes);
-  view.setUint32(0, Math.floor(counter / 0x100000000));
-  view.setUint32(4, counter >>> 0);
+  // RFC 6238: counter is a 64-bit big-endian integer. We build it byte-by-byte
+  // to avoid float/Uint32 precision issues for the high word.
+  let counter = Math.floor(timestampMs / 1000 / period);
+  const counterBytes = new Uint8Array(8);
+  for (let i = 7; i >= 0; i--) {
+    counterBytes[i] = counter & 0xff;
+    counter = Math.floor(counter / 256);
+  }
 
   const keyBytes = base32ToBytes(secret);
   const cryptoKey = await crypto.subtle.importKey(
@@ -66,7 +69,7 @@ export async function generateTotp(secret, timestampMs = Date.now(), period = 30
     false,
     ['sign']
   );
-  const hmac = new Uint8Array(await crypto.subtle.sign('HMAC', cryptoKey, counterBytes));
+  const hmac = new Uint8Array(await crypto.subtle.sign('HMAC', cryptoKey, counterBytes.buffer));
   const offset = hmac[hmac.length - 1] & 0x0f;
   const code =
     ((hmac[offset] & 0x7f) << 24) |
