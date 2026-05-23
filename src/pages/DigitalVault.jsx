@@ -7,10 +7,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
-import { Zap, Clock, Grid3X3, List, ArrowLeft } from 'lucide-react';
+import { Zap, Clock, Grid3X3, List, ArrowLeft, Cloud, CheckCircle2, Loader2 } from 'lucide-react';
 
 import Navbar from '@/components/noqueue/Navbar';
 import VaultDashboardStats from '@/components/vault/VaultDashboardStats';
+import { syncAllPendingToDrive } from '@/lib/google/vaultDriveSync';
 import VaultSearch from '@/components/vault/VaultSearch';
 import VaultAIAssistant from '@/components/vault/VaultAIAssistant';
 import RenewalAlert from '@/components/vault/RenewalAlert';
@@ -47,6 +48,8 @@ export default function DigitalVault() {
   const [tab, setTab] = useState('vault');
   const [showUpload, setShowUpload] = useState(false);
   const [highlightDoc, setHighlightDoc] = useState(null);
+  const [syncingAll, setSyncingAll] = useState(false);
+  const [syncedCount, setSyncedCount] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -94,6 +97,20 @@ export default function DigitalVault() {
     }, 100);
   }
 
+  async function handleSyncAll() {
+    setSyncingAll(true);
+    setSyncedCount(null);
+    const n = await syncAllPendingToDrive(docs);
+    setSyncedCount(n);
+    queryClient.invalidateQueries({ queryKey: ['gov-documents'] });
+    setSyncingAll(false);
+    setTimeout(() => setSyncedCount(null), 4000);
+  }
+
+  const pendingSyncCount = docs.filter(
+    d => d.file_url && d.drive_upload_status !== 'uploaded' && !d.google_drive_file_id
+  ).length;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -102,6 +119,44 @@ export default function DigitalVault() {
 
           {/* Stats header */}
           <VaultDashboardStats stats={stats} onUpload={() => setShowUpload(true)} />
+
+          {/* Google Drive sync banner */}
+          {docs.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-3 px-4 py-3 mb-5 rounded-2xl"
+              style={{ background: 'linear-gradient(135deg, rgba(66,133,244,0.10), rgba(52,168,83,0.06))', border: '1px solid rgba(66,133,244,0.20)' }}
+            >
+              <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
+                <Cloud className="w-4 h-4 text-[#4285F4]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-white">Google Drive backup</p>
+                <p className="text-[11px] text-slate-400">
+                  {syncedCount !== null
+                    ? `${syncedCount} document${syncedCount === 1 ? '' : 's'} synced to your Drive.`
+                    : pendingSyncCount === 0
+                      ? 'All documents are backed up to your Drive.'
+                      : `${pendingSyncCount} document${pendingSyncCount === 1 ? '' : 's'} not yet on your Drive.`}
+                </p>
+              </div>
+              {pendingSyncCount > 0 ? (
+                <button
+                  onClick={handleSyncAll}
+                  disabled={syncingAll}
+                  className="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-xl bg-[#4285F4]/15 hover:bg-[#4285F4]/25 text-[#4285F4] border border-[#4285F4]/30 disabled:opacity-50 transition-all"
+                >
+                  {syncingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : <Cloud className="w-3 h-3" />}
+                  {syncingAll ? 'Syncing…' : 'Sync all to Drive'}
+                </button>
+              ) : (
+                <span className="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
+                  <CheckCircle2 className="w-3 h-3" /> All synced
+                </span>
+              )}
+            </motion.div>
+          )}
 
           {/* Notifications */}
           <NotificationCenter docs={docs} />

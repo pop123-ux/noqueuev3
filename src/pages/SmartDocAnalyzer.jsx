@@ -1,10 +1,10 @@
 /**
  * SmartDocAnalyzer — Smart Document Intelligence main page
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowLeft, AlertCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/noqueue/Navbar';
 import SmartDocUploader from '@/components/smartDoc/SmartDocUploader';
 import SmartDocPipeline from '@/components/smartDoc/SmartDocPipeline';
@@ -12,6 +12,7 @@ import SmartDocReport from '@/components/smartDoc/SmartDocReport';
 import SmartDocBulkQueue from '@/components/smartDoc/SmartDocBulkQueue';
 import SmartDocBulkResults from '@/components/smartDoc/SmartDocBulkResults';
 import { analyzeDocument } from '@/services/documents/smartDocumentAnalyzer';
+import { base44 } from '@/api/base44Client';
 
 export default function SmartDocAnalyzer() {
   const [phase, setPhase] = useState('idle'); // idle | analyzing | done | error | bulk_analyzing | bulk_done
@@ -21,6 +22,38 @@ export default function SmartDocAnalyzer() {
   const [error, setError] = useState(null);
   const [bulkItems, setBulkItems] = useState([]);
   const [bulkIndex, setBulkIndex] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Cross-app entry: ?fromVault=<docId> → fetch the file from the vault and analyze it.
+  useEffect(() => {
+    const fromVault = searchParams.get('fromVault');
+    if (!fromVault || phase !== 'idle') return;
+    (async () => {
+      try {
+        setPhase('analyzing');
+        setStep(0);
+        setStepLabel('Încarcă din Vault...');
+        const docs = await base44.entities.GovDocument.filter({ id: fromVault }, '', 1);
+        const doc = docs?.[0];
+        if (!doc?.file_url) throw new Error('Documentul nu a fost găsit în Vault');
+        const res = await fetch(doc.file_url);
+        const blob = await res.blob();
+        const fileName = (doc.document_title || 'document') + (blob.type.includes('pdf') ? '.pdf' : '.jpg');
+        const file = new File([blob], fileName, { type: blob.type || 'application/octet-stream' });
+        const result = await analyzeDocument(file, (i, label) => { setStep(i); setStepLabel(label); });
+        setReport({ ...result, fromVault: doc.id });
+        setPhase('done');
+      } catch (err) {
+        console.warn('SmartDoc fromVault failed:', err);
+        setError(err?.message || 'Nu s-a putut analiza documentul din Vault');
+        setPhase('error');
+      } finally {
+        searchParams.delete('fromVault');
+        setSearchParams(searchParams, { replace: true });
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleFile = async (file) => {
     setPhase('analyzing');
