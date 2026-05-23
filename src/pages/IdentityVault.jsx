@@ -13,6 +13,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
+import { encryptField, decryptField } from '@/lib/security/encryption';
+import { validateUploadedFile } from '@/lib/security/fileValidation';
+import { checkRateLimit } from '@/lib/security/rateLimiter';
+import { audit } from '@/lib/security/auditLogger';
 
 const TABS = [
   { id: 'personal', label: 'Date personale', icon: User },
@@ -87,9 +91,19 @@ export default function IdentityVault() {
   const [profileData, setProfileData] = useState({});
   const [secretData, setSecretData] = useState({});
 
-  // Sync fetched data into local state
+  // Sync fetched data into local state — decrypt sensitive fields on load
   React.useEffect(() => { if (profile.id) setProfileData(profile); }, [profile.id]);
-  React.useEffect(() => { if (secret.id) setSecretData(secret); }, [secret.id]);
+  React.useEffect(() => {
+    if (secret.id && user?.email) {
+      Promise.all([
+        decryptField(secret.cnp_raw, user.email),
+        decryptField(secret.id_series, user.email),
+        decryptField(secret.id_number, user.email),
+      ]).then(([cnp_raw, id_series, id_number]) => {
+        setSecretData({ ...secret, cnp_raw, id_series, id_number });
+      }).catch(() => setSecretData(secret));
+    }
+  }, [secret.id, user?.email]);
 
   const saveProfile = useMutation({
     mutationFn: async (data) => {
@@ -107,13 +121,25 @@ export default function IdentityVault() {
 
   const saveSecret = useMutation({
     mutationFn: async (data) => {
+      const rl = checkRateLimit('file_upload', user.email);
+      if (!rl.allowed) throw new Error(rl.message);
+
       const cnp = data.cnp_raw || '';
+      const [enc_cnp, enc_series, enc_number] = await Promise.all([
+        encryptField(data.cnp_raw || '', user.email),
+        encryptField(data.id_series || '', user.email),
+        encryptField(data.id_number || '', user.email),
+      ]);
       const payload = {
         ...data,
         user_id: user.email,
+        cnp_raw: enc_cnp,
         cnp_masked: cnp ? maskCNP(cnp) : '',
+        id_series: enc_series,
+        id_number: enc_number,
         verified_by_user_at: new Date().toISOString(),
       };
+      await audit.vaultSave(user.email, 'IdentitySecret');
       return secret.id
         ? base44.entities.IdentitySecret.update(secret.id, payload)
         : base44.entities.IdentitySecret.create(payload);
@@ -126,6 +152,7 @@ export default function IdentityVault() {
   });
 
   const handleDeleteData = async () => {
+    await audit.vaultDeleted(user?.email || 'anon');
     if (profile.id) await base44.entities.UserPrivateProfile.delete(profile.id);
     if (secret.id) await base44.entities.IdentitySecret.delete(secret.id);
     queryClient.invalidateQueries({ queryKey: ['vault-profile', 'vault-secret'] });
@@ -317,7 +344,12 @@ export default function IdentityVault() {
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
+                      const validation = validateUploadedFile(file);
+                      if (!validation.valid) { await audit.fileRejected(user?.email || 'anon', validation.error); alert(validation.error); return; }
+                      const rl = checkRateLimit('file_upload', user?.email || 'anon');
+                      if (!rl.allowed) { alert(rl.message); return; }
                       const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                      await audit.fileUploaded(user?.email || 'anon', file.type);
                       setSecretData(s => ({ ...s, signature_file_url: file_url }));
                     }}
                   />
@@ -351,7 +383,12 @@ export default function IdentityVault() {
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
+                        const validation = validateUploadedFile(file);
+                        if (!validation.valid) { await audit.fileRejected(user?.email || 'anon', validation.error); alert(validation.error); return; }
+                        const rl = checkRateLimit('file_upload', user?.email || 'anon');
+                        if (!rl.allowed) { alert(rl.message); return; }
                         const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                        await audit.fileUploaded(user?.email || 'anon', file.type);
                         const updated = { ...profileData, [key]: file_url, user_id: user.email };
                         setProfileData(updated);
                         profile.id

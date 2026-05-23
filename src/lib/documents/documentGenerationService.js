@@ -5,12 +5,18 @@
 import { base44 } from '@/api/base44Client';
 import { buildSupportSheet } from './pdf/buildSupportSheet';
 import { getMissingFields } from './profileFieldMap';
+import { checkRateLimit } from '../security/rateLimiter';
+import { audit } from '../security/auditLogger';
 
 /**
  * Generate a single document and persist to GeneratedDocument entity.
  * Returns the GeneratedDocument record.
  */
 export async function generateDocument({ docResult, profile, caseId, procedureKey }) {
+  const userId = (await base44.auth.me())?.email || 'unknown';
+  const rl = checkRateLimit('document_generate', userId);
+  if (!rl.allowed) throw new Error(rl.message);
+
   const { template } = docResult;
   const missingFields = getMissingFields(profile, template.requiredProfileFields || []);
 
@@ -35,8 +41,6 @@ export async function generateDocument({ docResult, profile, caseId, procedureKe
   const blob = new Blob([pdfBytes], { type: 'application/pdf' });
   const file = new File([blob], `${template.id}_${Date.now()}.pdf`, { type: 'application/pdf' });
   const { file_url } = await base44.integrations.Core.UploadFile({ file });
-
-  const userId = (await base44.auth.me())?.email || 'unknown';
 
   const payload = {
     user_id: userId,
@@ -65,6 +69,7 @@ export async function generateDocument({ docResult, profile, caseId, procedureKe
   };
 
   const record = await base44.entities.GeneratedDocument.create(payload);
+  await audit.documentGenerated(userId, template.id);
   return record;
 }
 
