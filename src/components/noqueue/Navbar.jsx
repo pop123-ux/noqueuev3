@@ -59,8 +59,13 @@ export default function Navbar() {
               <User className="w-3.5 h-3.5" />
               Cont
             </Link>
+            <Link to="/identity-onboarding">
+              <Button size="sm" variant="outline" className="ml-3 border-accent/30 text-accent hover:bg-accent/10 rounded-xl">
+                <Shield className="w-3.5 h-3.5 mr-1" /> Scanează buletin
+              </Button>
+            </Link>
             <Link to="/start">
-              <Button size="sm" className="ml-3 bg-primary hover:bg-primary/90 text-white rounded-xl">
+              <Button size="sm" className="bg-primary hover:bg-primary/90 text-white rounded-xl">
                 Start a Case
               </Button>
             </Link>
@@ -96,8 +101,13 @@ export default function Navbar() {
           <Link to="/move-to-romania" onClick={() => setOpen(false)} className="block py-3 text-sm text-slate-300 hover:text-white border-b border-white/5">
             🌍 Move to Romania
           </Link>
+          <Link to="/identity-onboarding" onClick={() => setOpen(false)}>
+            <Button variant="outline" className="mt-3 w-full border-accent/30 text-accent hover:bg-accent/10 rounded-xl">
+              🆔 Scanează buletin
+            </Button>
+          </Link>
           <Link to="/start" onClick={() => setOpen(false)}>
-            <Button className="mt-3 w-full bg-primary hover:bg-primary/90 text-white rounded-xl">
+            <Button className="mt-2 w-full bg-primary hover:bg-primary/90 text-white rounded-xl">
               Start a Case
             </Button>
           </Link>

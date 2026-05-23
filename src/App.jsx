@@ -18,6 +18,7 @@ import DigitalVault from './pages/DigitalVault';
 import PassportDemo from './pages/PassportDemo';
 import MoveToRomania from './pages/MoveToRomania';
 import SmartDocAnalyzer from './pages/SmartDocAnalyzer';
+import IdentityOnboarding from './pages/IdentityOnboarding';
 // TODO: re-enable for production — OnboardingGate is intentionally bypassed in DEMO MODE.
 // import OnboardingGate from './components/auth/OnboardingGate';
 // Add page imports here
@@ -84,6 +85,7 @@ const AuthenticatedApp = () => {
       <Route path="/demo/passport" element={<PassportDemo />} />
       <Route path="/move-to-romania" element={<MoveToRomania />} />
       <Route path="/smart-doc" element={<SmartDocAnalyzer />} />
+      <Route path="/identity-onboarding" element={<IdentityOnboarding />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
