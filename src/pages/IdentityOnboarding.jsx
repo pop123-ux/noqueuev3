@@ -11,7 +11,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ShieldCheck, AlertCircle, Zap } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Zap } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { STATES } from '@/state/onboardingStateMachine';
 import { extractRomanianIdData } from '@/services/ocr/romanianIdOcrService';
@@ -24,7 +24,29 @@ import OcrProcessingStep from '@/components/identityOnboarding/OcrProcessingStep
 import ReviewExtractedIdentity from '@/components/identityOnboarding/ReviewExtractedIdentity';
 import TwoFactorStep from '@/components/identityOnboarding/TwoFactorStep';
 import ProfileGeneratedStep from '@/components/identityOnboarding/ProfileGeneratedStep';
-import { Button } from '@/components/ui/button';
+import OcrRecoveryPanel from '@/components/identityOnboarding/OcrRecoveryPanel';
+import ManualIdentityForm from '@/components/identityOnboarding/ManualIdentityForm';
+
+/** Demo Romanian identity used when judges click "Continue with demo identity". */
+const DEMO_IDENTITY = {
+  first_name: 'Andrei',
+  last_name: 'Popescu',
+  full_name: 'Andrei Popescu',
+  cnp: '1960515123456',
+  id_series: 'CJ',
+  id_number: '345621',
+  address: 'Str. Memorandumului nr. 21, ap. 4',
+  city: 'Cluj-Napoca',
+  county: 'Cluj',
+  id_issued_by: 'SPCJEP Cluj',
+  id_issue_date: '2020-05-15',
+  id_expiry_date: '2030-05-15',
+  birth_date: '1996-05-15',
+  birth_place: 'Cluj-Napoca',
+  sex: 'M',
+  citizenship: 'ROU',
+  nationality: 'Română',
+};
 
 export default function IdentityOnboarding() {
   const [state, setState] = useState(STATES.EMAIL_ENTRY);
@@ -61,7 +83,9 @@ export default function IdentityOnboarding() {
       });
       logAuditEvent({ userId: email, action: 'identity_ocr_completed', resourceType: 'IdentityOnboarding', details: `confidence=${result.confidence.overall.toFixed(2)}` });
       if (!result.success) {
-        setError('Nu am putut citi cartea de identitate. Asigură-te că imaginea este clară, fără umbre sau reflexii, și că toate cele 4 colțuri sunt vizibile.');
+        // Keep partial result so the recovery panel can show confidence + prefill manual form
+        setOcrResult(result);
+        setError('Nu am putut citi clar cartea de identitate.');
         setState(STATES.ERROR);
         return;
       }
@@ -69,9 +93,44 @@ export default function IdentityOnboarding() {
       setState(STATES.REVIEW_DATA);
     } catch (err) {
       console.warn('OCR failed:', err);
+      setOcrResult(null);
       setError('Eroare la procesarea OCR. Te rugăm să încerci din nou.');
       setState(STATES.ERROR);
     }
+  };
+
+  // ── Recovery paths ──────────────────────────────────────────────────
+
+  const handleManualEntry = () => {
+    logAuditEvent({ userId: email, action: 'identity_manual_entry_started', resourceType: 'IdentityOnboarding' });
+    setState(STATES.MANUAL_ENTRY);
+  };
+
+  const handleManualSubmit = (data) => {
+    // Synthesize an ocrResult shape so downstream save logic works unchanged.
+    setOcrResult({
+      extractedData: data,
+      confidence: { overall: 1, _source: 'manual' },
+      warnings: [],
+      fileUrl: ocrResult?.fileUrl || null,
+      auditTrail: [],
+    });
+    logAuditEvent({ userId: email, action: 'identity_manual_entry_submitted', resourceType: 'IdentityOnboarding' });
+    setVerifiedData(data);
+    setState(STATES.TWO_FACTOR);
+  };
+
+  const handleDemoIdentity = () => {
+    setOcrResult({
+      extractedData: DEMO_IDENTITY,
+      confidence: { overall: 1, _source: 'demo' },
+      warnings: [],
+      fileUrl: null,
+      auditTrail: [],
+    });
+    logAuditEvent({ userId: email, action: 'identity_demo_continued', resourceType: 'IdentityOnboarding' });
+    setVerifiedData(DEMO_IDENTITY);
+    setState(STATES.TWO_FACTOR);
   };
 
   const handleReviewConfirm = (data) => {
@@ -216,8 +275,10 @@ export default function IdentityOnboarding() {
           </div>
         </div>
 
-        {/* Progress bar (hidden on complete) */}
-        {state !== STATES.PROFILE_GENERATED && state !== STATES.ERROR && (
+        {/* Progress bar (hidden on complete + recovery paths) */}
+        {state !== STATES.PROFILE_GENERATED &&
+         state !== STATES.ERROR &&
+         state !== STATES.MANUAL_ENTRY && (
           <StepProgressBar currentState={state} />
         )}
 
@@ -274,11 +335,26 @@ export default function IdentityOnboarding() {
             )}
 
             {state === STATES.ERROR && (
-              <motion.div key="error" exit={{ opacity: 0 }} className="text-center py-6">
-                <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-3" />
-                <h2 className="text-xl font-bold text-white mb-2">Ceva nu a mers</h2>
-                <p className="text-sm text-slate-400 mb-5 max-w-sm mx-auto">{error}</p>
-                <Button onClick={handleRescan} className="rounded-2xl bg-primary">Încearcă din nou</Button>
+              <motion.div key="error" exit={{ opacity: 0 }}>
+                <OcrRecoveryPanel
+                  confidence={ocrResult?.confidence}
+                  missingCritical={ocrResult?.missingCritical}
+                  unreliableCritical={ocrResult?.unreliableCritical}
+                  onRetry={handleRescan}
+                  onManualEntry={handleManualEntry}
+                  onDemoIdentity={handleDemoIdentity}
+                  onUploadDifferent={handleRescan}
+                />
+              </motion.div>
+            )}
+
+            {state === STATES.MANUAL_ENTRY && (
+              <motion.div key="manual" exit={{ opacity: 0 }}>
+                <ManualIdentityForm
+                  initialData={ocrResult?.extractedData || {}}
+                  onBack={() => setState(STATES.ERROR)}
+                  onSubmit={handleManualSubmit}
+                />
               </motion.div>
             )}
           </AnimatePresence>
