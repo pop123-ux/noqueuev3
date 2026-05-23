@@ -19,7 +19,12 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
+import { buildLostIdCardApplicationPdf } from '@/lib/documents/pdf/buildLostIdCardApplicationPdf';
 import { buildLostIdCardOverlayPdf } from '@/lib/documents/pdf/buildLostIdCardOverlayPdf';
+
+// Template-overlay output is fragile without proper calibration — keep it
+// disabled by default. The clean NoQueue layout is the stable demo path.
+const USE_TEMPLATE_OVERLAY = false;
 import {
   LOST_ID_REQUIRED_FIELDS,
   getMissingLostIdFields,
@@ -50,10 +55,10 @@ async function persistGeneratedDocument({ bytes, user, missingCount }) {
       document_key: 'cerere-eliberare-act-identitate-pierdere',
       document_title: 'Cerere eliberare act de identitate — pierdere/furt',
       status: missingCount > 0 ? 'needs_review' : 'ready',
-      fill_method: 'support-sheet',
+      fill_method: 'stable_generated_pdf',
       official_submittable: false,
-      source_type: 'user_provided_template',
-      source_label: 'ANEXA nr. 11 — pregătit de NoQueue',
+      source_type: 'noqueue_generated_draft',
+      source_label: 'NoQueue — cerere pregătită pe baza datelor din Seif',
       pdf_file_url: file_url,
       download_file_name: DOWNLOAD_NAME,
       mime_type: 'application/pdf',
@@ -161,10 +166,9 @@ export default function LostIdCardDemo() {
     setError('');
     setSuccess(false);
     try {
-      const bytes = await buildLostIdCardOverlayPdf({
-        profile: profile || {},
-        reason,
-      });
+      const bytes = USE_TEMPLATE_OVERLAY
+        ? await buildLostIdCardOverlayPdf({ profile: profile || {}, reason })
+        : await buildLostIdCardApplicationPdf({ profile: profile || {}, reason });
       triggerDownload(bytes, DOWNLOAD_NAME);
       // Persist async — UI does not wait
       persistGeneratedDocument({ bytes, user, missingCount: missing.length });
@@ -226,6 +230,22 @@ export default function LostIdCardDemo() {
             Datele din Seiful de Identitate sunt folosite pentru a pregăti cererea
             de eliberare a actului de identitate (ANEXA nr. 11) în caz de pierdere/furt.
           </p>
+
+          <div
+            className="mt-4 rounded-2xl px-4 py-3 flex items-start gap-2.5"
+            style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.22)' }}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
+            <div>
+              <p className="text-[11px] font-bold text-accent uppercase tracking-wider mb-0.5">
+                Format demo stabil
+              </p>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Pentru stabilitate în demo, NoQueue generează o versiune curată a cererii,
+                cu aceleași date necesare, în locul suprapunerii fragile pe imagine scanată.
+              </p>
+            </div>
+          </div>
         </motion.div>
 
         {/* Completeness card */}
