@@ -14,6 +14,7 @@ import { base44 } from '@/api/base44Client';
 import { buildRagAnswer } from '@/lib/rag/ragAnswerBuilder';
 import { matchRequirements, getReadinessScore } from '@/lib/rag/requirementMatcher';
 import GeneratedDocumentsPanel from '@/components/documents/GeneratedDocumentsPanel';
+import PassportWorkspace from '@/components/passport/PassportWorkspace';
 
 function Section({ title, icon: SectionIcon, color = 'text-primary', children, defaultOpen = true }) {
   const Icon = SectionIcon;
@@ -325,6 +326,16 @@ export default function CaseWorkspace({ cas, profile, onClose }) {
             ))}
           </div>
         </Section>
+      )}
+
+      {/* Passport workspace — shown for passport cases */}
+      {(cas.procedure_key === 'passport_application' || (cas.procedure_title || '').toLowerCase().includes('pasaport') || (cas.procedure_title || '').toLowerCase().includes('passport')) && (
+        <div>
+          <div className="flex items-center gap-2 mb-3 px-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-warning">✈️ Passport Auto-Fill</span>
+          </div>
+          <PassportWorkspace profile={profile} caseData={cas} />
+        </div>
       )}
 
       {/* Generated Documents */}

@@ -18,6 +18,7 @@ import { routeDocuments } from '@/lib/documents/documentRouter';
 import { generateDocumentsForCase } from '@/lib/documents/documentGenerationService';
 import GeneratedDocumentCard from '@/components/documents/GeneratedDocumentCard';
 import ProfileCompletenessCard from '@/components/profile/ProfileCompletenessCard';
+import PassportWorkspace from '@/components/passport/PassportWorkspace';
 
 const QUICK_STARTS = [
   { label: 'Renew ID card', emoji: '🪪', query: 'I need to renew my ID card' },
@@ -189,6 +190,7 @@ export default function CaseStart() {
   const [generatingDocs, setGeneratingDocs] = useState(false);
   const [generatedDocs, setGeneratedDocs] = useState([]);
   const [profile, setProfile] = useState(null);
+  const [showPassportWorkspace, setShowPassportWorkspace] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
@@ -240,7 +242,17 @@ export default function CaseStart() {
     return newCase;
   };
 
+  const isPassportCase = (text) => {
+    const t = (text || '').toLowerCase();
+    return t.includes('passport') || t.includes('pasaport') || t.includes('pasport');
+  };
+
   const handleGenerateDocs = async () => {
+    // Passport gets its own dedicated workspace
+    if (isPassportCase(input) || isPassportCase(result?.procedure_key) || isPassportCase(result?.procedure_title)) {
+      setShowPassportWorkspace(true);
+      return;
+    }
     setGeneratingDocs(true);
     setGeneratedDocs([]);
     let caseId = savedCaseId;
@@ -430,8 +442,17 @@ export default function CaseStart() {
           )}
         </AnimatePresence>
 
+        {/* Passport Workspace */}
+        <AnimatePresence>
+          {showPassportWorkspace && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
+              <PassportWorkspace profile={profile} caseData={result} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Profile completeness hint if missing */}
-        {result && !profile?.first_name && (
+        {result && !profile?.first_name && !showPassportWorkspace && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
             <ProfileCompletenessCard profile={profile} compact />
           </motion.div>
