@@ -12,11 +12,12 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck, Zap } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { STATES } from '@/state/onboardingStateMachine';
 import { extractRomanianIdData } from '@/services/ocr/romanianIdOcrService';
-import { encryptField } from '@/lib/security/encryption';
 import { logAuditEvent } from '@/lib/security/auditLogger';
+import { syncScannedIdentityToProfile } from '@/lib/profile/syncScannedIdentityToProfile';
 import StepProgressBar from '@/components/identityOnboarding/StepProgressBar';
 import EmailEntryStep from '@/components/identityOnboarding/EmailEntryStep';
 import IdUploadStep from '@/components/identityOnboarding/IdUploadStep';
@@ -59,6 +60,7 @@ export default function IdentityOnboarding() {
   const [ocrLabel, setOcrLabel] = useState('');
   const [error, setError] = useState(null);
   const [savingProfile, setSavingProfile] = useState(false);
+  const queryClient = useQueryClient();
 
   // Pre-fill email from auth (best effort)
   useEffect(() => {
@@ -148,8 +150,33 @@ export default function IdentityOnboarding() {
   const handleTwoFactorVerified = async () => {
     setSavingProfile(true);
     try {
-      await saveSafeProfile();
-      logAuditEvent({ userId: email, action: 'identity_2fa_verified', resourceType: 'IdentityOnboarding' });
+      // Resolve the authenticated user (fall back to the typed email for demo).
+      const authUser = await base44.auth.me().catch(() => null);
+      const user = authUser?.email ? authUser : { email };
+
+      const sourceLabel =
+        ocrResult?.confidence?._source === 'manual' ? 'manual_entry' :
+        ocrResult?.confidence?._source === 'demo'   ? 'demo_identity' :
+        'identity_card_scan';
+
+      const savedProfile = await syncScannedIdentityToProfile({
+        user,
+        extractedData: verifiedData,
+        ocrResult,
+        sourceFileUrl: ocrResult?.fileUrl,
+        markOnboardingComplete: true,
+        sourceLabel,
+      });
+
+      // Invalidate Cont + Seif caches so they show the freshly synced data.
+      queryClient.invalidateQueries({ queryKey: ['profile-hub'] });
+      queryClient.invalidateQueries({ queryKey: ['vault-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['vault-secret'] });
+      queryClient.invalidateQueries({ queryKey: ['gov-documents'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+
+      setProfile(savedProfile);
+      logAuditEvent({ userId: user.email, action: 'identity_2fa_verified', resourceType: 'IdentityOnboarding' });
       setState(STATES.PROFILE_GENERATED);
     } catch (err) {
       console.warn('Profile save failed:', err);
@@ -157,97 +184,6 @@ export default function IdentityOnboarding() {
       setState(STATES.ERROR);
     }
     setSavingProfile(false);
-  };
-
-  // ── Persist Safe Profile + IdentitySecret + GovDocument ─────────────
-
-  const saveSafeProfile = async () => {
-    const d = verifiedData;
-    if (!d || !email) throw new Error('Missing data or email');
-
-    // Encrypt sensitive fields
-    const enc = async (v) => v ? await encryptField(v, email) : null;
-    const [encCnp, encSeries, encNumber] = await Promise.all([
-      enc(d.cnp), enc(d.id_series), enc(d.id_number),
-    ]);
-
-    const cnpMasked = d.cnp ? d.cnp.slice(0, 4) + '******' + d.cnp.slice(-3) : null;
-    const fullName = [d.first_name, d.last_name].filter(Boolean).join(' ');
-
-    // Update or create UserPrivateProfile
-    const profilePayload = {
-      user_id: email,
-      email,
-      first_name: d.first_name,
-      last_name: d.last_name,
-      full_name: fullName,
-      sex: d.sex,
-      birth_date: d.birth_date,
-      birth_place: d.birth_place,
-      address_line_1: d.address,
-      county: d.county,
-      city: d.city,
-      country: 'Romania',
-      citizenship: d.citizenship || 'ROU',
-      id_series: encSeries,
-      id_number: encNumber,
-      id_issued_by: d.id_issued_by,
-      id_issue_date: d.id_issue_date,
-      id_expiry_date: d.id_expiry_date,
-      id_front_file_url: ocrResult.fileUrl,
-      identity_ocr_verified: true,
-      onboarding_completed: true,
-      is_profile_complete: true,
-      last_verified_at: new Date().toISOString(),
-    };
-
-    const secretPayload = {
-      user_id: email,
-      cnp_raw: encCnp,
-      cnp_masked: cnpMasked,
-      id_series: encSeries,
-      id_number: encNumber,
-      birth_date: d.birth_date,
-      legal_address_full: d.address,
-      verified_by_user_at: new Date().toISOString(),
-    };
-
-    const [profiles, secrets] = await Promise.all([
-      base44.entities.UserPrivateProfile.filter({ user_id: email }, '-created_date', 1),
-      base44.entities.IdentitySecret.filter({ user_id: email }, '-created_date', 1),
-    ]);
-
-    const [savedProfile] = await Promise.all([
-      profiles?.length
-        ? base44.entities.UserPrivateProfile.update(profiles[0].id, profilePayload)
-        : base44.entities.UserPrivateProfile.create(profilePayload),
-      secrets?.length
-        ? base44.entities.IdentitySecret.update(secrets[0].id, secretPayload)
-        : base44.entities.IdentitySecret.create(secretPayload),
-      base44.entities.GovDocument.create({
-        user_id: email,
-        document_type: 'id_card',
-        document_title: 'Carte de Identitate',
-        institution: d.id_issued_by || 'SPCJEP',
-        file_url: ocrResult.fileUrl,
-        ocr_full_name: fullName,
-        ocr_document_number: d.id_number,
-        ocr_address: d.address,
-        ocr_institution: d.id_issued_by,
-        issue_date: d.id_issue_date,
-        expiry_date: d.id_expiry_date,
-        ocr_confidence: String(ocrResult.confidence.overall.toFixed(2)),
-        status: 'active',
-        tags: ['identity_onboarding', 'noqueue_ocr', 'verified_by_user'],
-      }),
-    ]);
-
-    setProfile({
-      ...d,
-      full_name: fullName,
-      cnp_masked: cnpMasked,
-      id: savedProfile?.id,
-    });
   };
 
   // ── Render ──────────────────────────────────────────────────────────

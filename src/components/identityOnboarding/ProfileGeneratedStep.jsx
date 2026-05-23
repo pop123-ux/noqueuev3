@@ -4,7 +4,7 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, Sparkles, Zap, Briefcase, FileText, ShieldCheck, ScanLine, KeyRound } from 'lucide-react';
+import { CheckCircle2, Sparkles, Zap, Briefcase, FileText, ShieldCheck, ScanLine, KeyRound, User, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const SUMMARY = [
@@ -67,32 +67,68 @@ export default function ProfileGeneratedStep({ profile }) {
         </div>
       </div>
 
-      {/* Profile snapshot */}
+      {/* Profile snapshot — uses the actual saved UserPrivateProfile */}
       {profile && (
-        <div className="rounded-2xl p-4 mb-5 text-left"
+        <div className="rounded-2xl p-4 mb-3 text-left"
           style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.10), rgba(6,182,212,0.06))', border: '1px solid rgba(37,99,235,0.25)' }}>
           <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-2">Safe Profile</p>
           <p className="text-base font-bold text-white">{profile.full_name}</p>
-          {profile.cnp_masked && <p className="text-xs text-slate-400 font-mono mt-0.5">CNP: {profile.cnp_masked}</p>}
-          {profile.address && <p className="text-xs text-slate-400 mt-1 truncate">{profile.address}</p>}
+          {(profile.cnp_masked || profile.cnp) && (
+            <p className="text-xs text-slate-400 font-mono mt-0.5">CNP: {profile.cnp_masked || profile.cnp}</p>
+          )}
+          {(profile.address_line_1 || profile.address) && (
+            <p className="text-xs text-slate-400 mt-1 truncate">
+              {profile.address_line_1 || profile.address}
+              {profile.city ? `, ${profile.city}` : ''}
+              {profile.county ? `, ${profile.county}` : ''}
+            </p>
+          )}
+          {typeof profile.profile_completion_pct === 'number' && (
+            <div className="mt-3 flex items-center gap-2">
+              <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all"
+                  style={{ width: `${profile.profile_completion_pct}%` }}
+                />
+              </div>
+              <span className="text-[10px] text-slate-400">{profile.profile_completion_pct}%</span>
+            </div>
+          )}
         </div>
       )}
 
+      <p className="text-[11px] text-success mb-5 flex items-center gap-1.5 justify-center">
+        <CheckCircle2 className="w-3 h-3" />
+        Datele scanate au fost salvate automat în Cont și Seiful de Identitate.
+      </p>
+
       {/* CTAs */}
       <div className="space-y-2">
-        <Link to="/">
+        <Link to="/os">
           <Button className="w-full h-12 rounded-2xl bg-primary hover:bg-primary/90 font-semibold">
             <Zap className="w-4 h-4 mr-2" />
             Deschide NoQueue AI
           </Button>
         </Link>
         <div className="grid grid-cols-2 gap-2">
+          <Link to="/profile">
+            <Button variant="outline" className="w-full h-10 rounded-2xl border-white/15 text-slate-300">
+              <User className="w-3.5 h-3.5 mr-1.5" /> Vezi Contul
+            </Button>
+          </Link>
+          <Link to="/vault">
+            <Button variant="outline" className="w-full h-10 rounded-2xl border-white/15 text-slate-300">
+              <Shield className="w-3.5 h-3.5 mr-1.5" /> Vezi Seiful
+            </Button>
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
           <Link to="/cases">
             <Button variant="outline" className="w-full h-10 rounded-2xl border-white/15 text-slate-300">
               <Briefcase className="w-3.5 h-3.5 mr-1.5" /> My Cases
             </Button>
           </Link>
-          <Link to="/start?workflow=passport-renewal">
+          <Link to="/demo/passport">
             <Button variant="outline" className="w-full h-10 rounded-2xl border-white/15 text-slate-300">
               <FileText className="w-3.5 h-3.5 mr-1.5" /> Pașaport
             </Button>

@@ -17,7 +17,11 @@
     },
     "cnp": {
       "type": "string",
-      "description": "Romanian personal numeric code (legacy \u2014 use IdentitySecret.cnp_raw)"
+      "description": "Masked CNP for display (e.g. 5090******788). Raw CNP lives encrypted in IdentitySecret.cnp_raw."
+    },
+    "cnp_masked": {
+      "type": "string",
+      "description": "Explicit masked CNP for display, mirrors UserPrivateProfile.cnp for clarity."
     },
     "sex": {
       "type": "string",
@@ -48,6 +52,10 @@
     "citizenship": {
       "type": "string",
       "default": "RO"
+    },
+    "nationality": {
+      "type": "string",
+      "description": "Free-text nationality (e.g. 'Rom\u00e2n\u0103')."
     },
     "address_line_1": {
       "type": "string"
@@ -130,6 +138,11 @@
       "type": "number",
       "default": 1
     },
+    "profile_completion_pct": {
+      "type": "number",
+      "default": 0,
+      "description": "0-100 completeness score computed at save time."
+    },
     "is_profile_complete": {
       "type": "boolean",
       "default": false
@@ -150,6 +163,18 @@
     },
     "last_verified_at": {
       "type": "string"
+    },
+    "last_synced_from_scan_at": {
+      "type": "string",
+      "description": "ISO timestamp of last sync from the ID scan flow."
+    },
+    "last_ocr_confidence": {
+      "type": "number",
+      "description": "Overall OCR confidence (0-1) of the last identity scan."
+    },
+    "source": {
+      "type": "string",
+      "description": "Where the latest profile snapshot came from (e.g. identity_card_scan, manual_entry, demo)."
     }
   },
   "required": [
