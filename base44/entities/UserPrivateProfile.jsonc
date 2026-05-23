@@ -96,13 +96,13 @@
     },
     "height_cm": {
       "type": "number",
-      "description": "Height in centimeters \u2014 used for passport Semnalmente auto-fill",
+      "description": "Height in centimeters",
       "minimum": 50,
       "maximum": 250
     },
     "eye_color": {
       "type": "string",
-      "description": "Eye color (Romanian) \u2014 used for passport Semnalmente auto-fill",
+      "description": "Eye color (Romanian)",
       "enum": [
         "C\u0103prui",
         "Alba\u0219tri",
@@ -137,6 +137,16 @@
     "onboarding_completed": {
       "type": "boolean",
       "default": false
+    },
+    "identity_ocr_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "True after ID card OCR verification is confirmed by user"
+    },
+    "signature_collected": {
+      "type": "boolean",
+      "default": false,
+      "description": "True after signature is drawn or uploaded and confirmed"
     },
     "last_verified_at": {
       "type": "string"
