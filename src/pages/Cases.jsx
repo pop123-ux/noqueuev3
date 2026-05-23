@@ -189,7 +189,7 @@ export default function Cases() {
           <div>
             <h1 className="text-2xl font-bold text-white"></h1>
             <p className="text-sm text-slate-500 mt-0.5 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-primary" /> AI Civic Workspace
+              <Sparkles className="w-3.5 h-3.5 text-primary" /> Auto-Complete Documents
             </p>
           </div>
         </div>
