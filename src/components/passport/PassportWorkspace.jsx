@@ -367,7 +367,7 @@ export default function PassportWorkspace({ profile, caseData }) {
             <span className="text-sm font-semibold text-white">{passportProcedure.institution}</span>
             <span className="text-lg font-bold text-warning">~{passportProcedure.estimatedWait}</span>
           </div>
-          <p className="text-xs text-slate-400">{passportProcedure.institutionAddress}</p>
+          <p className="text-xs text-slate-400">Str. Andrei Mureșanu 16, 400394 Cluj-Napoca</p>
           <p className="text-xs text-slate-500">{passportProcedure.institutionHours}</p>
           <div className="grid grid-cols-2 gap-2 mt-2">
             <div className="rounded-xl p-2.5 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
