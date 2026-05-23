@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Search, MapPin, Clock, Globe, Users, Award, AlertCircle, ExternalLink } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, MapPin, Clock, Globe, Users, Award, AlertCircle, ExternalLink, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { clujInstitutions, getQueueStatus } from '@/lib/data/clujInstitutions';
 import CopyablePhoneNumber from '@/components/ui/CopyablePhoneNumber';
@@ -15,6 +15,7 @@ const categories = ['All', ...new Set(clujInstitutions.map(i => i.categoryLabel)
 
 function InstitutionCard({ inst, isBest, onViewMap }) {
   const [expanded, setExpanded] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const crowd = crowdConfig[inst.crowd];
   const status = getQueueStatus(inst.queue);
 
@@ -98,6 +99,47 @@ function InstitutionCard({ inst, isBest, onViewMap }) {
                 <span key={s} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-400">{s}</span>
               ))}
             </div>
+
+            {/* More details toggle */}
+            {inst.description && (
+              <div>
+                <button
+                  onClick={e => { e.stopPropagation(); setShowMore(!showMore); }}
+                  className="flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 transition-colors"
+                >
+                  {showMore ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  {showMore ? 'Less info' : 'More about this institution'}
+                </button>
+                <AnimatePresence>
+                  {showMore && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-2 space-y-2.5 pt-2 border-t border-white/5">
+                        <p className="text-[10px] text-slate-400 leading-relaxed">{inst.description}</p>
+                        {inst.whatYouCanDo && (
+                          <div>
+                            <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">What you can do here</p>
+                            <ul className="space-y-1">
+                              {inst.whatYouCanDo.map(item => (
+                                <li key={item} className="flex items-start gap-1.5 text-[10px] text-slate-300">
+                                  <CheckCircle2 className="w-3 h-3 text-success shrink-0 mt-0.5" />
+                                  {item}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
             <div className="rounded-xl px-3 py-2 text-[10px] text-warning" style={{ background: 'rgba(250,204,21,0.05)', border: '1px solid rgba(250,204,21,0.15)' }}>
               ⚠️ {inst.commonMistake}
             </div>
