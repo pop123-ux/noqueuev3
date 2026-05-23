@@ -15,6 +15,8 @@ import SmartRecommendations from '@/components/noqueue/SmartRecommendations';
 import DigitalRomaniaFit from '@/components/noqueue/DigitalRomaniaFit';
 import MoveToRomaniaDashboardCard from '@/components/moveToRomania/MoveToRomaniaDashboardCard';
 import SmartDocFeatureCard from '@/components/noqueue/SmartDocFeatureCard';
+import CivicCopilotFeatureCard from '@/components/noqueue/CivicCopilotFeatureCard';
+import AnticipatoryDashboard from '@/components/anticipatory/AnticipatoryDashboard';
 import Footer from '@/components/noqueue/Footer';
 
 export default function Home() {
@@ -54,6 +56,12 @@ export default function Home() {
 
       {/* AI Chat — main experience */}
       <NoQueueAIChat onWorkflowDetected={handleWorkflowDetected} />
+
+      {/* Anticipatory Intelligence — NoQueue AI 2.0 Pillar 1 */}
+      <AnticipatoryDashboard />
+
+      {/* Personal AI Agent — NoQueue AI 2.0 Pillar 2 */}
+      <CivicCopilotFeatureCard />
 
       {/* Smart Document Intelligence — NoQueue AI 2.0 feature */}
       <SmartDocFeatureCard />
