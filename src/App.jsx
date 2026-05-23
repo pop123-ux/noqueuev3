@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import MainApp from './pages/MainApp';
 import Home from './pages/Home';
 import CaseStart from './pages/CaseStart';
 import Cases from './pages/Cases';
@@ -42,7 +43,8 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<MainApp />} />
+      <Route path="/home-old" element={<Home />} />
       <Route path="/start" element={<CaseStart />} />
       <Route path="/cases" element={<Cases />} />
       <Route path="/appointments/watch" element={<AppointmentWatchPage />} />
