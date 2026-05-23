@@ -94,6 +94,26 @@
         "widowed"
       ]
     },
+    "height_cm": {
+      "type": "number",
+      "description": "Height in centimeters \u2014 used for passport Semnalmente auto-fill",
+      "minimum": 50,
+      "maximum": 250
+    },
+    "eye_color": {
+      "type": "string",
+      "description": "Eye color (Romanian) \u2014 used for passport Semnalmente auto-fill",
+      "enum": [
+        "C\u0103prui",
+        "Alba\u0219tri",
+        "Verzi",
+        "Negri",
+        "Gri",
+        "C\u0103prui-verzui",
+        "Hazel",
+        "Altele"
+      ]
+    },
     "signature_file_url": {
       "type": "string"
     },

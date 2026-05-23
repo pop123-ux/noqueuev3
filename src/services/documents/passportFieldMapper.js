@@ -86,6 +86,22 @@ export function mapProfileToPassportForm(profile, options = {}) {
   const urgentDA = isUrgent;
   const urgentNU = !isUrgent;
 
+  // ── Auto-filled fields ──────────────────────────────────────────────────
+  // Submission date: current date in Bucharest timezone, DD/MM/YYYY
+  const bucharestDate = new Date().toLocaleDateString('ro-RO', {
+    timeZone: 'Europe/Bucharest',
+    day: '2-digit', month: '2-digit', year: 'numeric',
+  }); // "23.05.2026"
+  const [subD, subM, subY] = bucharestDate.split('.');
+  const submissionDateBoxes = [...(subD || '').split(''), ...(subM || '').split(''), ...(subY || '').split('')];
+
+  // Height & eye color
+  const heightCm = profile?.height_cm ? String(profile.height_cm) : '';
+  const eyeColor = profile?.eye_color || '';
+
+  // Signature
+  const signatureUrl = profile?.signature_file_url || null;
+
   // Missing fields detection
   const missing = [];
   if (!profile?.cnp) missing.push('CNP');
@@ -101,6 +117,9 @@ export function mapProfileToPassportForm(profile, options = {}) {
   if (!profile?.id_number) missing.push('Nr. CI');
   if (!profile?.father_name) missing.push('Prenumele tatalui');
   if (!profile?.mother_name) missing.push('Prenumele mamei');
+  if (!heightCm) missing.push('Inaltime');
+  if (!eyeColor) missing.push('Culoarea ochilor');
+  if (!signatureUrl) missing.push('Semnatura');
 
   return {
     cnpBoxes,
@@ -124,8 +143,12 @@ export function mapProfileToPassportForm(profile, options = {}) {
     urgentDA,
     urgentNU,
     isUrgent,
+    submissionDateBoxes,
+    heightCm,
+    eyeColor,
+    signatureUrl,
     missing,
-    filledCount: 13 - missing.length,
-    readiness: Math.round(((13 - missing.length) / 13) * 100),
+    filledCount: 16 - missing.length,
+    readiness: Math.round(((16 - missing.length) / 16) * 100),
   };
 }

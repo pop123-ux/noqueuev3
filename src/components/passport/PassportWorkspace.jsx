@@ -141,6 +141,24 @@ export default function PassportWorkspace({ profile, caseData }) {
           </div>
         </div>
 
+        {/* Auto-fill badges */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {[
+            { label: '📅 Data depunerii', filled: true },
+            { label: '📏 Înălțime', filled: !!activeProfile?.height_cm },
+            { label: '👁 Culoarea ochilor', filled: !!activeProfile?.eye_color },
+            { label: '✍️ Semnătură', filled: !!activeProfile?.signature_file_url },
+          ].map(({ label, filled }) => (
+            <span key={label} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${
+              filled
+                ? 'bg-green-500/10 text-green-400 border-green-500/25'
+                : 'bg-warning/10 text-warning border-warning/25'
+            }`}>
+              {filled ? '✓ ' : '⚠ '}{label}
+            </span>
+          ))}
+        </div>
+
         {/* Draft warning */}
         <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl mb-4" style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.2)' }}>
           <Info className="w-3.5 h-3.5 text-warning mt-0.5 shrink-0" />

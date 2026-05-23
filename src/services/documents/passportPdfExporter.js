@@ -374,36 +374,77 @@ export async function exportStructuredPassportPdf(profile, options = {}) {
   curY = urgRowY - 4;
 
   // ── SEMNALMENTE + DATA ──────────────────────────────────────────
-  const signRowY = curY - 42;
-  page.drawRectangle({ x: formX, y: signRowY, width: formW, height: 44, borderColor: BORDER, borderWidth: 0.5 });
+  const signRowH = 52;
+  const signRowY = curY - signRowH;
+  page.drawRectangle({ x: formX, y: signRowY, width: formW, height: signRowH, borderColor: BORDER, borderWidth: 0.5 });
 
   // Semnalmente (left third)
   const thirdW = formW / 3;
-  page.drawRectangle({ x: formX, y: signRowY, width: thirdW, height: 44, color: GRAY_BG, borderColor: BORDER, borderWidth: 0.5 });
-  page.drawText('Semnalmente', { x: formX + 6, y: signRowY + 30, size: 8, font: bold, color: BLACK });
+  page.drawRectangle({ x: formX, y: signRowY, width: thirdW, height: signRowH, color: GRAY_BG, borderColor: BORDER, borderWidth: 0.5 });
+  page.drawText('Semnalmente', { x: formX + 6, y: signRowY + signRowH - 14, size: 8, font: bold, color: BLACK });
 
-  // Inaltimea
-  page.drawRectangle({ x: formX + 4, y: signRowY + 4, width: 30, height: 18, borderColor: BORDER, borderWidth: 0.5 });
-  page.drawText('Inaltimea', { x: formX + 4, y: signRowY + 24, size: 7, font: regular, color: BLACK });
-  page.drawText('cm', { x: formX + 38, y: signRowY + 8, size: 7, font: regular, color: BLACK });
+  // Inaltimea box + value
+  page.drawRectangle({ x: formX + 4, y: signRowY + 6, width: 32, height: 18, color: WHITE, borderColor: data.heightCm ? rgb(0.2,0.6,0.2) : BORDER, borderWidth: data.heightCm ? 1 : 0.5 });
+  page.drawText('Inaltimea', { x: formX + 4, y: signRowY + signRowH - 28, size: 7, font: regular, color: DARK_GRAY });
+  if (data.heightCm) {
+    const htW = bold.widthOfTextAtSize(data.heightCm, 9);
+    page.drawText(data.heightCm, { x: formX + 4 + (32 - htW) / 2, y: signRowY + 10, size: 9, font: bold, color: BLUE });
+  }
+  page.drawText('cm', { x: formX + 40, y: signRowY + 10, size: 7, font: regular, color: DARK_GRAY });
 
-  // Culoarea ochilor
-  page.drawRectangle({ x: formX + 55, y: signRowY + 4, width: thirdW - 65, height: 18, borderColor: BORDER, borderWidth: 0.5 });
-  page.drawText('Culoarea ochilor', { x: formX + 55, y: signRowY + 24, size: 7, font: regular, color: BLACK });
+  // Culoarea ochilor box + value
+  const eyeBoxX = formX + 54;
+  const eyeBoxW = thirdW - 62;
+  page.drawRectangle({ x: eyeBoxX, y: signRowY + 6, width: eyeBoxW, height: 18, color: WHITE, borderColor: data.eyeColor ? rgb(0.2,0.6,0.2) : BORDER, borderWidth: data.eyeColor ? 1 : 0.5 });
+  page.drawText('Culoarea ochilor', { x: eyeBoxX, y: signRowY + signRowH - 28, size: 7, font: regular, color: DARK_GRAY });
+  if (data.eyeColor) {
+    const eyeTxt = safe(data.eyeColor);
+    const eyeW = bold.widthOfTextAtSize(eyeTxt, 7.5);
+    page.drawText(eyeTxt, { x: eyeBoxX + (eyeBoxW - eyeW) / 2, y: signRowY + 10, size: 7.5, font: bold, color: BLUE });
+  }
 
-  // Data depunerii (middle third)
-  page.drawText('Data depunerii cererii', { x: formX + thirdW + 8, y: signRowY + 30, size: 8, font: bold, color: BLACK });
-  // Date boxes for submission date
-  const subDateBoxes = ['', '', '', '', '', '', '', ''];
-  drawCharBoxes(page, subDateBoxes, formX + thirdW + 8, signRowY + 10, 'normal', bold, 8);
+  // Data depunerii (middle third) — auto-filled
+  const midThirdX = formX + thirdW;
+  page.drawText('Data depunerii cererii', { x: midThirdX + 6, y: signRowY + signRowH - 14, size: 8, font: bold, color: BLACK });
+  // Draw submission date boxes with auto values
+  drawCharBoxes(page, data.submissionDateBoxes, midThirdX + 6, signRowY + 10, 'filled', bold, 8);
+  // Small AUTO label
+  page.drawText('AUTO', { x: midThirdX + 6, y: signRowY + 4, size: 6, font: helv, color: rgb(0.2, 0.5, 0.2) });
 
-  // Semnatura (right)
-  page.drawRectangle({ x: formX + thirdW * 2, y: signRowY, width: thirdW, height: 44, borderColor: BORDER, borderWidth: 0.5 });
-  page.drawText('Semnatura', { x: formX + thirdW * 2 + (thirdW / 2) - 20, y: signRowY + 6, size: 8, font: bold, color: BLACK });
+  // Semnatura (right third)
+  const sigThirdX = formX + thirdW * 2;
+  page.drawRectangle({ x: sigThirdX, y: signRowY, width: thirdW, height: signRowH, borderColor: BORDER, borderWidth: 0.5 });
+  page.drawText('Semnatura', { x: sigThirdX + (thirdW / 2) - 20, y: signRowY + 4, size: 8, font: bold, color: BLACK });
 
-  // Signature placeholder
-  if (profile?.signature_file_url) {
-    page.drawText('[semnatura din Seif]', { x: formX + thirdW * 2 + 8, y: signRowY + 22, size: 7, font: regular, color: BLUE });
+  // Embed actual signature image from vault
+  if (data.signatureUrl) {
+    try {
+      const sigResp = await fetch(data.signatureUrl);
+      const sigBuf = await sigResp.arrayBuffer();
+      const sigUrl = data.signatureUrl.toLowerCase();
+      let embeddedSig;
+      if (sigUrl.includes('.png') || sigUrl.includes('png')) {
+        embeddedSig = await pdfDoc.embedPng(sigBuf);
+      } else {
+        embeddedSig = await pdfDoc.embedJpg(sigBuf);
+      }
+      const { width: imgW, height: imgH } = embeddedSig.scale(1);
+      // Fit into signature area preserving aspect ratio
+      const maxW = thirdW - 12;
+      const maxH = signRowH - 18;
+      const scale = Math.min(maxW / imgW, maxH / imgH);
+      const dw = imgW * scale;
+      const dh = imgH * scale;
+      const drawX = sigThirdX + (thirdW - dw) / 2;
+      const drawY = signRowY + 12 + (maxH - dh) / 2;
+      page.drawImage(embeddedSig, { x: drawX, y: drawY, width: dw, height: dh });
+    } catch {
+      page.drawText('[semnatura din Seif]', { x: sigThirdX + 6, y: signRowY + signRowH - 22, size: 7, font: regular, color: BLUE });
+    }
+  } else {
+    // Missing signature warning
+    page.drawRectangle({ x: sigThirdX + 4, y: signRowY + 14, width: thirdW - 8, height: signRowH - 24, color: rgb(1, 0.96, 0.88), borderColor: rgb(0.9, 0.7, 0.2), borderWidth: 0.5 });
+    page.drawText('! Semnatura lipsa din Seif', { x: sigThirdX + 6, y: signRowY + 22, size: 6.5, font: helv, color: RED });
   }
 
   curY = signRowY - 8;

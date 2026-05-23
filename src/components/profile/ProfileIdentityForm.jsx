@@ -31,6 +31,8 @@ const schema = z.object({
   id_issue_date:  z.string().optional(),
   id_expiry_date: z.string().optional(),
   marital_status: z.enum(['single', 'married', 'divorced', 'widowed', '']).optional(),
+  height_cm:      z.coerce.number().min(50).max(250).optional().or(z.literal('')),
+  eye_color:      z.string().optional(),
 });
 
 function Field({ label, error, children, required }) {
@@ -95,6 +97,8 @@ export default function ProfileIdentityForm({ profile, onSave, saving }) {
       id_issue_date:  profile?.id_issue_date || '',
       id_expiry_date: profile?.id_expiry_date || '',
       marital_status: profile?.marital_status || '',
+      height_cm:      profile?.height_cm || '',
+      eye_color:      profile?.eye_color || '',
     },
   });
 
@@ -152,6 +156,40 @@ export default function ProfileIdentityForm({ profile, onSave, saving }) {
         <FormInput label="Place of birth (Localitatea nașterii)" name="birth_place" register={register} errors={errors} placeholder="Cluj-Napoca" />
         <FormInput label="Father's first name" name="father_name" register={register} errors={errors} />
         <FormInput label="Mother's first name" name="mother_name" register={register} errors={errors} />
+
+        {/* Biometric fields for passport auto-fill */}
+        <Field label="Înălțime (cm)" error={errors.height_cm?.message}>
+          <Input
+            type="number"
+            min={50} max={250}
+            placeholder="175"
+            {...register('height_cm')}
+            className="bg-white/[0.04] border-white/10 text-white placeholder:text-slate-600 h-9 text-sm focus:border-primary/50"
+          />
+          <p className="text-[10px] text-slate-600 mt-0.5 flex items-center gap-1">
+            <span className="text-accent">✦</span> Folosit pentru auto-completare pasaport (Semnalmente)
+          </p>
+        </Field>
+
+        <Field label="Culoarea ochilor" error={errors.eye_color?.message}>
+          <select
+            {...register('eye_color')}
+            className="w-full h-9 px-3 rounded-md bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-primary/50"
+          >
+            <option value="">— Selecteaza —</option>
+            <option value="Căprui">Căprui</option>
+            <option value="Albaștri">Albaștri</option>
+            <option value="Verzi">Verzi</option>
+            <option value="Negri">Negri</option>
+            <option value="Gri">Gri</option>
+            <option value="Căprui-verzui">Căprui-verzui</option>
+            <option value="Hazel">Hazel</option>
+            <option value="Altele">Altele</option>
+          </select>
+          <p className="text-[10px] text-slate-600 mt-0.5 flex items-center gap-1">
+            <span className="text-accent">✦</span> Folosit pentru auto-completare pasaport (Semnalmente)
+          </p>
+        </Field>
 
         <Field label="Marital status">
           <select

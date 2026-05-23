@@ -342,30 +342,60 @@ export default function StructuredPassportPreview({ profile, options = {} }) {
           </div>
 
           {/* SEMNALMENTE + SEMNATURA */}
-          <div className="flex items-stretch border border-gray-400 -mt-px" style={{minHeight:52}}>
+          <div className="flex items-stretch border border-gray-400 -mt-px" style={{minHeight:60}}>
             {/* Semnalmente */}
             <div className="border-r border-gray-400 bg-gray-100 shrink-0 px-1 py-1" style={{width:110}}>
-              <div className="text-[8px] font-bold mb-1">Semnalmente</div>
-              <div className="flex items-center gap-1">
+              <div className="text-[8px] font-bold mb-1 flex items-center gap-1">
+                Semnalmente
+                {(data.heightCm || data.eyeColor) && (
+                  <span className="text-[7px] bg-green-100 text-green-700 px-1 rounded font-semibold">AUTO</span>
+                )}
+              </div>
+              <div className="flex items-end gap-1">
                 <div>
-                  <div className="text-[7px]">Inaltimea</div>
-                  <div className="border border-gray-400 bg-white" style={{width:28, height:16}} />
-                  <div className="text-[7px]">cm</div>
+                  <div className="text-[7px] text-gray-500">Inaltimea</div>
+                  <div className={`border flex items-center justify-center font-bold text-[9px] ${data.heightCm ? 'border-green-500 bg-green-50 text-green-800' : 'border-gray-400 bg-white text-gray-300'}`}
+                    style={{width:28, height:16}}>
+                    {data.heightCm || ''}
+                  </div>
+                  <div className="text-[7px] text-gray-500">cm</div>
                 </div>
                 <div>
-                  <div className="text-[7px]">Culoarea ochilor</div>
-                  <div className="border border-gray-400 bg-white" style={{width:50, height:16}} />
+                  <div className="text-[7px] text-gray-500">Culoarea ochilor</div>
+                  <div className={`border flex items-center justify-center font-bold text-[7px] ${data.eyeColor ? 'border-green-500 bg-green-50 text-green-800' : 'border-gray-400 bg-white'}`}
+                    style={{width:60, height:16}}>
+                    {data.eyeColor ? data.eyeColor.slice(0, 8) : (
+                      <span className="text-yellow-400 text-[6px]">lipsa</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
             {/* Data depunerii */}
             <div className="flex-1 border-r border-gray-400 px-1 py-1">
-              <div className="text-[8px] font-bold mb-1">Data depunerii cererii</div>
-              <CharBoxRow chars={['','','','','','','','']} />
+              <div className="text-[8px] font-bold mb-1 flex items-center gap-1">
+                Data depunerii cererii
+                <span className="text-[7px] bg-blue-100 text-blue-700 px-1 rounded font-semibold">AUTO</span>
+              </div>
+              <CharBoxRow chars={data.submissionDateBoxes} />
             </div>
             {/* Semnatura */}
-            <div className="flex-1 flex items-end justify-center pb-1">
-              <span className="text-[8px] font-bold">Semnatura</span>
+            <div className="flex-1 flex flex-col items-center justify-between py-1 px-1">
+              {data.signatureUrl ? (
+                <div className="flex-1 flex items-center justify-center w-full">
+                  <img
+                    src={data.signatureUrl}
+                    alt="Semnatura"
+                    className="max-h-10 max-w-full object-contain"
+                    style={{ filter: 'contrast(1.4) brightness(0.85)' }}
+                  />
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <span className="text-[7px] text-yellow-500 text-center leading-tight">semnatura<br/>lipsa din Seif</span>
+                </div>
+              )}
+              <span className="text-[8px] font-bold text-gray-700 mt-0.5">Semnatura</span>
             </div>
           </div>
 

@@ -43,6 +43,9 @@ export const passportProcedure = {
     { key: 'phone',           label: 'Telefon',             profilePath: 'phone' },
     { key: 'email',           label: 'Email',               profilePath: 'email' },
     { key: 'citizenship',     label: 'Cetatenie',           profilePath: 'citizenship' },
+    { key: 'height_cm',       label: 'Înălțime (cm)',       profilePath: 'height_cm' },
+    { key: 'eye_color',       label: 'Culoarea ochilor',    profilePath: 'eye_color' },
+    { key: 'signature_file_url', label: 'Semnătură',        profilePath: 'signature_file_url' },
   ],
 
   commonMistakes: [
