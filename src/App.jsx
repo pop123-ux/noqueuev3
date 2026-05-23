@@ -62,10 +62,10 @@ const AuthenticatedApp = () => {
     }
   }
 
-  // Show onboarding gate if user hasn't completed onboarding
-  if (user && !profile?.onboarding_completed) {
-    return <OnboardingGate user={user} onComplete={fetchProfile} />;
-  }
+  // DEMO MODE: onboarding gate bypassed temporarily
+  // if (user && !profile?.onboarding_completed) {
+  //   return <OnboardingGate user={user} onComplete={fetchProfile} />;
+  // }
 
   return (
     <Routes>
