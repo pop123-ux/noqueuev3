@@ -8,6 +8,7 @@
  */
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { mapProfileToPassportForm, toCharBoxes, parseDateBoxes } from './passportFieldMapper';
+import { normalizeSignatureImage } from '@/lib/documents/pdf/normalizeSignatureImage';
 
 /** Strip Romanian diacritics for WinAnsi PDF encoding */
 function safe(text) {
@@ -418,31 +419,36 @@ export async function exportStructuredPassportPdf(profile, options = {}) {
 
   // Embed actual signature image from vault
   if (data.signatureUrl) {
-    try {
-      const sigResp = await fetch(data.signatureUrl);
-      const sigBuf = await sigResp.arrayBuffer();
-      const sigUrl = data.signatureUrl.toLowerCase();
-      let embeddedSig;
-      if (sigUrl.includes('.png') || sigUrl.includes('png')) {
-        embeddedSig = await pdfDoc.embedPng(sigBuf);
-      } else {
-        embeddedSig = await pdfDoc.embedJpg(sigBuf);
+    const sigNorm = await normalizeSignatureImage(data.signatureUrl);
+    if (sigNorm && sigNorm.bytes && sigNorm.bytes.byteLength > 0) {
+      try {
+        let embeddedSig;
+        if (sigNorm.mimeType === 'image/jpeg') {
+          embeddedSig = await pdfDoc.embedJpg(sigNorm.bytes);
+        } else {
+          embeddedSig = await pdfDoc.embedPng(sigNorm.bytes);
+        }
+        const { width: imgW, height: imgH } = embeddedSig.scale(1);
+        const maxW = thirdW - 12;
+        const maxH = signRowH - 18;
+        const scale = Math.min(maxW / imgW, maxH / imgH);
+        const dw = imgW * scale;
+        const dh = imgH * scale;
+        const drawX = sigThirdX + (thirdW - dw) / 2;
+        const drawY = signRowY + 12 + (maxH - dh) / 2;
+        page.drawImage(embeddedSig, { x: drawX, y: drawY, width: dw, height: dh });
+      } catch (embedErr) {
+        console.warn('[PassportPDF] Signature embed failed:', embedErr?.message);
+        page.drawText('Semnatura: eroare incarcare', { x: sigThirdX + 4, y: signRowY + signRowH - 22, size: 6.5, font: helv, color: RED });
       }
-      const { width: imgW, height: imgH } = embeddedSig.scale(1);
-      // Fit into signature area preserving aspect ratio
-      const maxW = thirdW - 12;
-      const maxH = signRowH - 18;
-      const scale = Math.min(maxW / imgW, maxH / imgH);
-      const dw = imgW * scale;
-      const dh = imgH * scale;
-      const drawX = sigThirdX + (thirdW - dw) / 2;
-      const drawY = signRowY + 12 + (maxH - dh) / 2;
-      page.drawImage(embeddedSig, { x: drawX, y: drawY, width: dw, height: dh });
-    } catch {
-      page.drawText('[semnatura din Seif]', { x: sigThirdX + 6, y: signRowY + signRowH - 22, size: 7, font: regular, color: BLUE });
+    } else {
+      // Could not load — show warning
+      page.drawRectangle({ x: sigThirdX + 4, y: signRowY + 14, width: thirdW - 8, height: signRowH - 24, color: rgb(1, 0.96, 0.88), borderColor: rgb(0.9, 0.7, 0.2), borderWidth: 0.5 });
+      page.drawText('! Semnatura nu a putut fi', { x: sigThirdX + 6, y: signRowY + 26, size: 6, font: helv, color: RED });
+      page.drawText('incarcata din Identity Vault', { x: sigThirdX + 6, y: signRowY + 18, size: 6, font: helv, color: RED });
     }
   } else {
-    // Missing signature warning
+    // No signature URL — missing warning
     page.drawRectangle({ x: sigThirdX + 4, y: signRowY + 14, width: thirdW - 8, height: signRowH - 24, color: rgb(1, 0.96, 0.88), borderColor: rgb(0.9, 0.7, 0.2), borderWidth: 0.5 });
     page.drawText('! Semnatura lipsa din Seif', { x: sigThirdX + 6, y: signRowY + 22, size: 6.5, font: helv, color: RED });
   }
