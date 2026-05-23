@@ -39,6 +39,9 @@ export default function Home() {
 
   const handleSelectInstitution = useCallback((inst) => {
     setSelectedInstitution(inst);
+    setTimeout(() => {
+      document.getElementById('map')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   }, []);
 
   return (
