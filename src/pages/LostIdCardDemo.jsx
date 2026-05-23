@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
-import { buildLostIdCardApplicationPdf } from '@/lib/documents/pdf/buildLostIdCardApplicationPdf';
+import { buildLostIdCardOverlayPdf } from '@/lib/documents/pdf/buildLostIdCardOverlayPdf';
 import {
   LOST_ID_REQUIRED_FIELDS,
   getMissingLostIdFields,
@@ -161,7 +161,7 @@ export default function LostIdCardDemo() {
     setError('');
     setSuccess(false);
     try {
-      const bytes = await buildLostIdCardApplicationPdf({
+      const bytes = await buildLostIdCardOverlayPdf({
         profile: profile || {},
         reason,
       });
