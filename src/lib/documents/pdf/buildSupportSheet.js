@@ -21,12 +21,26 @@ const COLORS = {
 
 function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
 
+/** Replace Romanian diacritics and other non-WinAnsi chars with ASCII equivalents */
+function safe(text) {
+  if (!text) return text;
+  return String(text)
+    .replace(/[ăÄƒ]/g, 'a').replace(/[ÄÂ]/g, 'A')
+    .replace(/[âÂ]/g, 'a').replace(/[Â]/g, 'A')
+    .replace(/[\u00E2]/g, 'a').replace(/[\u00C2]/g, 'A')
+    .replace(/[\u0103]/g, 'a').replace(/[\u0102]/g, 'A')
+    .replace(/[\u00EE]/g, 'i').replace(/[\u00CE]/g, 'I')
+    .replace(/[\u0219\u015F]/g, 's').replace(/[\u0218\u015E]/g, 'S')
+    .replace(/[\u021B\u0163]/g, 't').replace(/[\u021A\u0162]/g, 'T')
+    .replace(/[^\x00-\xFF]/g, '?');
+}
+
 /**
  * Draw wrapped text, returns new Y position.
  */
 function drawWrapped(page, text, x, y, maxWidth, fontSize, font, color) {
   if (!text) return y;
-  const words = String(text).split(' ');
+  const words = safe(String(text)).split(' ');
   let line = '';
   let currentY = y;
   const lineHeight = fontSize * 1.4;
@@ -79,11 +93,11 @@ export async function buildSupportSheet({ template, profile, caseData, missingFi
   y = height - 88;
 
   // ── Document title ─────────────────────────────────────────
-  page.drawText((template.titleRo || template.title).toUpperCase(), {
+  page.drawText(safe(template.titleRo || template.title).toUpperCase(), {
     x: margin, y, size: 13, font: bold, color: COLORS.blue,
   });
   y -= 16;
-  page.drawText(template.title, { x: margin, y, size: 9, font: regular, color: COLORS.gray });
+  page.drawText(safe(template.title), { x: margin, y, size: 9, font: regular, color: COLORS.gray });
   y -= 6;
   page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 0.5, color: rgb(0.8, 0.85, 0.95) });
   y -= 14;
@@ -107,17 +121,17 @@ export async function buildSupportSheet({ template, profile, caseData, missingFi
   const sectionHeader = (label) => {
     y -= 6;
     page.drawRectangle({ x: margin, y: y - 4, width: contentW, height: 16, color: COLORS.light, borderRadius: 3 });
-    page.drawText(label.toUpperCase(), { x: margin + 6, y: y + 4, size: 7.5, font: bold, color: COLORS.navy });
+    page.drawText(safe(label).toUpperCase(), { x: margin + 6, y: y + 4, size: 7.5, font: bold, color: COLORS.navy });
     y -= 22;
   };
 
   const fieldRow = (label, value, missing = false) => {
-    page.drawText(label + ':', { x: margin + 6, y, size: 8, font: bold, color: COLORS.gray });
+    page.drawText(safe(label) + ':', { x: margin + 6, y, size: 8, font: bold, color: COLORS.gray });
     const valX = margin + 140;
     if (missing || !value) {
-      page.drawText('[ MISSING — fill in before submitting ]', { x: valX, y, size: 8, font: regular, color: COLORS.red });
+      page.drawText('[ MISSING - fill in before submitting ]', { x: valX, y, size: 8, font: regular, color: COLORS.red });
     } else {
-      page.drawText(String(value), { x: valX, y, size: 8, font: regular, color: COLORS.dark });
+      page.drawText(safe(String(value)), { x: valX, y, size: 8, font: regular, color: COLORS.dark });
     }
     y -= 13;
   };
@@ -142,8 +156,8 @@ export async function buildSupportSheet({ template, profile, caseData, missingFi
   fieldRow('Telefon',              norm.phone,           false);
 
   // ── Procedure info ─────────────────────────────────────────
-  sectionHeader(`Procedură — ${template.institution}`);
-  y = drawWrapped(page, `Instrucțiuni: ${template.instructionsShort || '—'}`, margin + 6, y, contentW - 12, 8, regular, COLORS.dark);
+  sectionHeader(`Procedura — ${safe(template.institution)}`);
+  y = drawWrapped(page, safe(`Instructiuni: ${template.instructionsShort || '-'}`), margin + 6, y, contentW - 12, 8, regular, COLORS.dark);
   y -= 4;
   if (template.onlineUrl) {
     page.drawText('Online:', { x: margin + 6, y, size: 8, font: bold, color: COLORS.gray });
@@ -160,8 +174,8 @@ export async function buildSupportSheet({ template, profile, caseData, missingFi
   if (template.requiredAttachments?.length > 0) {
     sectionHeader('Documente necesare la ghișeu');
     for (const att of template.requiredAttachments) {
-      page.drawText('□', { x: margin + 6, y, size: 9, font: bold, color: COLORS.blue });
-      y = drawWrapped(page, att, margin + 20, y, contentW - 26, 8, regular, COLORS.dark);
+      page.drawText('-', { x: margin + 6, y, size: 9, font: bold, color: COLORS.blue });
+      y = drawWrapped(page, safe(att), margin + 20, y, contentW - 26, 8, regular, COLORS.dark);
       y -= 2;
     }
     y -= 6;
