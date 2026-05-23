@@ -1,6 +1,11 @@
 # NoQueue v3 — Romania’s Civic Operating System
 
-> Built for **Cluj Hackathon 2026 — Digital Romania**  
+> Built for **Cluj Hackathon 2026 — Digital Romania**
+> Project made by:
+> **Pop Alexandru — Team Leader**
+> **Eric Ștefan Blideran**
+> **Darius Drînda**
+> **Paul Ilișan**
 > A modern civic platform that helps citizens avoid unnecessary queues, understand bureaucracy, auto-prepare documents, and manage life events from one digital place.
 
 ---
