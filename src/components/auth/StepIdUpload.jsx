@@ -11,6 +11,8 @@ import { encryptField } from '@/lib/security/encryption';
 import { checkRateLimit } from '@/lib/security/rateLimiter';
 import { logAuditEvent } from '@/lib/security/auditLogger';
 
+// ── OCR config ──────────────────────────────────────────────────────────────
+
 const OCR_SCHEMA = {
   type: 'object',
   properties: {
@@ -18,23 +20,81 @@ const OCR_SCHEMA = {
     sex: { type: 'string' }, birth_date: { type: 'string' }, birth_place: { type: 'string' },
     address: { type: 'string' }, id_series: { type: 'string' }, id_number: { type: 'string' },
     id_issued_by: { type: 'string' }, id_issue_date: { type: 'string' }, id_expiry_date: { type: 'string' },
+    nationality: { type: 'string' },
   },
 };
 
-const OCR_PROMPT = `Ești un asistent OCR specializat în acte de identitate românești. Extrage câmpurile din imaginea cărții de identitate și returnează DOAR un obiect JSON valid, fără text suplimentar, cu structura: { last_name, first_name, cnp, sex, birth_date, birth_place, address, id_series, id_number, id_issued_by, id_issue_date, id_expiry_date }. Dacă un câmp nu este lizibil sau nu există, setează-l null. Nu inventa date.`;
+const OCR_PROMPT = `Ești un asistent OCR specializat în cărți de identitate românești (Carte de Identitate).
+
+Analizează imaginea și extrage câmpurile de mai jos. Urmează aceste reguli stricte:
+
+1. Citește câmpurile vizuale mai întâi. Folosește etichetele bilingve ca ghid:
+   - 'Nume / Last name' → last_name
+   - 'Prenume / First name' → first_name
+   - 'CNP' (număr roșu de 13 cifre) → cnp
+   - 'SERIA [XX] NR [NNNNNN]' → id_series (2 litere) și id_number (6 cifre)
+   - 'Cetățenie' → nationality (returnează codul ROU dacă prezent)
+   - 'Loc naștere' → birth_place
+   - 'Domiciliu' → address (include tot textul adresei)
+   - 'Emisă de' → id_issued_by
+   - 'Valabilitate' → câmpul conține două date separate prin '-': prima este id_issue_date, a doua este id_expiry_date
+   - 'Sex' → sex (M sau F)
+
+2. Pentru date calendaristice: normalizează la format ISO YYYY-MM-DD.
+   Exemplu: '17.05.23' → '2023-05-17', '08.04.2027' → '2027-04-08'
+   Dacă anul are 2 cifre și e între 00-30, presupune 20XX. Dacă e între 31-99, presupune 19XX.
+   Extrage birth_date din CNP: cifrele 2-7 din CNP reprezintă AANNZZ (ex: 090408 → 2009-04-08 pentru CNP începând cu 5).
+
+3. Dacă un câmp vizual e neclar, folosește MRZ (cele două rânduri de la baza cărții) ca fallback:
+   - Rândul 2 MRZ: primele caractere = id_series+id_number, pozițiile 7-12 = birth_date (AANNZZ), poziția 13 = sex, pozițiile 14-19 = expiry_date (AANNZZ), pozițiile 20-32 = CNP
+
+4. Returnează DOAR un obiect JSON valid, fără text, fără markdown, fără explicații:
+{"last_name":"DRÎNDA","first_name":"DARIUS-MATEI","cnp":"5090408125788","sex":"M","birth_date":"2009-04-08","birth_place":"Jud.CJ Mun.Cluj-Napoca","address":"Jud.CJ Sat.Florești (Com.Florești), Str.Prof. Ioan Rusu nr.50","id_series":"CJ","id_number":"697708","id_issued_by":"SPCJEP CLUJ","id_issue_date":"2023-05-17","id_expiry_date":"2027-04-08","nationality":"ROU"}
+
+5. Nu inventa sau ghici date. Dacă un câmp nu este lizibil și nu poate fi dedus din MRZ, setează-l null.`;
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+function birthDateFromCNP(cnp) {
+  if (!cnp || cnp.length !== 13) return null;
+  const s = parseInt(cnp[0]);
+  const yy = cnp.slice(1, 3);
+  const mm = cnp.slice(3, 5);
+  const dd = cnp.slice(5, 7);
+  let yyyy;
+  if (s === 1 || s === 2) yyyy = '19' + yy;
+  else if (s === 3 || s === 4) yyyy = '18' + yy;
+  else if (s === 5 || s === 6) yyyy = '20' + yy;
+  else if (s === 7 || s === 8) yyyy = '19' + yy;
+  else yyyy = '20' + yy;
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function validateOcrResult(data) {
+  const errors = [];
+  if (!data.last_name || !data.first_name) errors.push('Nume lipsă');
+  if (!data.cnp || !/^\d{13}$/.test(data.cnp)) errors.push('CNP invalid');
+  if (!data.id_series || !/^[A-Z]{2}$/.test(data.id_series)) errors.push('Seria CI invalidă');
+  if (!data.id_number || !/^\d{6}$/.test(data.id_number)) errors.push('Numărul CI invalid');
+  if (data.id_expiry_date && new Date(data.id_expiry_date) <= new Date()) errors.push('EXPIRED');
+  return errors;
+}
 
 const LABELS = {
   last_name: 'Nume', first_name: 'Prenume', cnp: 'CNP', sex: 'Sex',
   birth_date: 'Data nașterii', birth_place: 'Locul nașterii', address: 'Adresă',
   id_series: 'Serie CI', id_number: 'Număr CI', id_issued_by: 'Eliberat de',
-  id_issue_date: 'Data eliberării', id_expiry_date: 'Valabil până',
+  id_issue_date: 'Data eliberării', id_expiry_date: 'Valabil până', nationality: 'Naționalitate',
 };
+
+// ── Component ────────────────────────────────────────────────────────────────
 
 export default function StepIdUpload({ user, onComplete }) {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [status, setStatus] = useState('idle'); // idle | processing | review | saving | error
+  const [retryCount, setRetryCount] = useState(0);
   const [ocrData, setOcrData] = useState(null);
   const [editData, setEditData] = useState(null);
   const [editing, setEditing] = useState(false);
@@ -47,13 +107,13 @@ export default function StepIdUpload({ user, onComplete }) {
     setFile(f);
     setErrorMsg('');
     if (f.type.startsWith('image/')) {
-      const url = URL.createObjectURL(f);
-      setPreview(url);
+      setPreview(URL.createObjectURL(f));
     } else {
       setPreview(null);
     }
     setStatus('idle');
     setOcrData(null);
+    setRetryCount(0);
   };
 
   const handleDrop = (e) => {
@@ -75,17 +135,40 @@ export default function StepIdUpload({ user, onComplete }) {
         model: 'claude_sonnet_4_6',
         response_json_schema: OCR_SCHEMA,
       });
-      const required = ['last_name', 'first_name', 'cnp', 'id_series', 'id_number'];
-      if (!result || required.every(k => !result[k])) {
-        setErrorMsg('Nu am putut citi actul. Asigură-te că fotografia este clară și încearcă din nou.');
+
+      // Auto-fill birth_date from CNP if OCR missed it
+      if (!result.birth_date && result.cnp) {
+        result.birth_date = birthDateFromCNP(result.cnp);
+      }
+
+      const validationErrors = validateOcrResult(result);
+
+      if (validationErrors.includes('EXPIRED')) {
+        setErrorMsg('Actul de identitate este expirat. Te rugăm să folosești un act valabil.');
         setStatus('error');
         return;
       }
+
+      const coreFieldsMissing = !result.last_name || !result.first_name ||
+        !/^\d{13}$/.test(result.cnp) || !/^[A-Z]{2}$/.test(result.id_series) || !/^\d{6}$/.test(result.id_number);
+
+      if (coreFieldsMissing) {
+        setRetryCount(c => c + 1);
+        setErrorMsg(retryCount >= 1
+          ? 'Nu am putut citi actul. Sfaturi: ✓ Fotografiază pe fundal închis ✓ Asigură-te că toate cele 4 colțuri sunt vizibile ✓ Evită reflexiile și umbrele ✓ Ține camera paralelă cu actul'
+          : 'Nu am putut citi actul. Asigură-te că fotografia este clară și încearcă din nou.');
+        setStatus('error');
+        return;
+      }
+
       setOcrData({ ...result, _file_url: file_url });
       setEditData({ ...result });
       setStatus('review');
-    } catch (e) {
-      setErrorMsg('Nu am putut citi actul. Asigură-te că fotografia este clară și încearcă din nou.');
+    } catch {
+      setRetryCount(c => c + 1);
+      setErrorMsg(retryCount >= 1
+        ? 'Nu am putut citi actul. Sfaturi: ✓ Fotografiază pe fundal închis ✓ Asigură-te că toate cele 4 colțuri sunt vizibile ✓ Evită reflexiile și umbrele ✓ Ține camera paralelă cu actul'
+        : 'Nu am putut citi actul. Asigură-te că fotografia este clară și încearcă din nou.');
       setStatus('error');
     }
   };
@@ -141,7 +224,7 @@ export default function StepIdUpload({ user, onComplete }) {
 
       logAuditEvent({ userId: user.email, action: 'identity_ocr_verified', resourceType: 'UserPrivateProfile', details: 'ID card OCR verified and confirmed by user' });
       onComplete();
-    } catch (e) {
+    } catch {
       setErrorMsg('Eroare la salvare. Încearcă din nou.');
       setStatus('review');
     }
@@ -164,12 +247,14 @@ export default function StepIdUpload({ user, onComplete }) {
             dragging ? 'border-primary bg-primary/10' : 'border-white/15 hover:border-white/25 bg-white/[0.02]'
           }`}
         >
-          <input ref={inputRef} type="file" accept=".jpg,.jpeg,.png,.pdf" className="hidden" onChange={e => e.target.files[0] && handleFile(e.target.files[0])} />
+          <input ref={inputRef} type="file" accept=".jpg,.jpeg,.png,.pdf" className="hidden"
+            onChange={e => e.target.files[0] && handleFile(e.target.files[0])} />
           {preview ? (
             <div className="w-full text-center">
               <img src={preview} alt="Preview" className="max-h-40 mx-auto rounded-xl object-contain mb-3" />
               <p className="text-xs text-slate-400">{file?.name}</p>
-              <button onClick={e => { e.stopPropagation(); setFile(null); setPreview(null); setStatus('idle'); }} className="mt-2 text-xs text-destructive hover:text-destructive/80">
+              <button onClick={e => { e.stopPropagation(); setFile(null); setPreview(null); setStatus('idle'); }}
+                className="mt-2 text-xs text-destructive hover:text-destructive/80">
                 <X className="w-3 h-3 inline mr-1" />Elimină
               </button>
             </div>
@@ -191,12 +276,13 @@ export default function StepIdUpload({ user, onComplete }) {
       {errorMsg && (
         <div className="flex items-start gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 mb-4">
           <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-          <p className="text-xs text-destructive">{errorMsg}</p>
+          <p className="text-xs text-destructive leading-relaxed">{errorMsg}</p>
         </div>
       )}
 
       {status === 'review' && ocrData && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-4 border border-white/8 mb-4">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          className="glass-card rounded-2xl p-4 border border-white/8 mb-4">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-semibold text-white">Sunt acestea datele tale?</p>
             <button onClick={() => setEditing(!editing)} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80">
@@ -216,9 +302,7 @@ export default function StepIdUpload({ user, onComplete }) {
                       className="flex-1 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary/50"
                     />
                   ) : (
-                    <span className={val ? 'text-white font-medium' : 'text-slate-600 italic'}>
-                      {val || '—'}
-                    </span>
+                    <span className={val ? 'text-white font-medium' : 'text-slate-600 italic'}>{val || '—'}</span>
                   )}
                 </div>
               );
@@ -227,28 +311,30 @@ export default function StepIdUpload({ user, onComplete }) {
         </motion.div>
       )}
 
-      {status === 'idle' || status === 'error' ? (
+      {(status === 'idle' || status === 'error') && (
         <Button onClick={handleOCR} disabled={!file} className="w-full h-11 rounded-xl bg-primary disabled:opacity-40">
           Verifică actul
         </Button>
-      ) : status === 'processing' ? (
+      )}
+      {status === 'processing' && (
         <Button disabled className="w-full h-11 rounded-xl bg-primary/60">
           <Loader2 className="w-4 h-4 animate-spin mr-2" />Se procesează actul...
         </Button>
-      ) : status === 'review' ? (
+      )}
+      {status === 'review' && (
         <div className="flex gap-3">
-          <Button variant="outline" onClick={() => { setStatus('idle'); setOcrData(null); }} className="flex-1 h-11 rounded-xl border-white/15 text-slate-300">
-            Refă
-          </Button>
+          <Button variant="outline" onClick={() => { setStatus('idle'); setOcrData(null); }}
+            className="flex-1 h-11 rounded-xl border-white/15 text-slate-300">Refă</Button>
           <Button onClick={handleConfirm} className="flex-1 h-11 rounded-xl bg-primary">
             <CheckCircle2 className="w-4 h-4 mr-2" />Confirmă
           </Button>
         </div>
-      ) : status === 'saving' ? (
+      )}
+      {status === 'saving' && (
         <Button disabled className="w-full h-11 rounded-xl bg-primary/60">
           <Loader2 className="w-4 h-4 animate-spin mr-2" />Se salvează...
         </Button>
-      ) : null}
+      )}
     </div>
   );
 }
