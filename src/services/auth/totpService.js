@@ -37,17 +37,23 @@ function base32ToBytes(b32) {
   return new Uint8Array(bytes);
 }
 
-/** Build the otpauth:// URI consumed by Google Authenticator. */
-export function buildOtpAuthUri({ secret, accountName, issuer = 'NoQueue AI' }) {
-  const label = encodeURIComponent(`${issuer}:${accountName}`);
+/**
+ * Build the otpauth:// URI consumed by Google Authenticator.
+ * Issuer is kept without spaces ("NoQueue") for maximum compatibility — some
+ * authenticator apps mis-handle whitespace in the label/issuer pair.
+ */
+export function buildOtpAuthUri({ secret, accountName = 'user', issuer = 'NoQueue' }) {
+  const cleanSecret = String(secret).replace(/\s+/g, '').toUpperCase();
+  const cleanIssuer = (issuer || 'NoQueue').replace(/\s+/g, '');
+  const label = `${cleanIssuer}:${accountName}`;
   const params = new URLSearchParams({
-    secret,
-    issuer,
+    secret: cleanSecret,
+    issuer: cleanIssuer,
     algorithm: 'SHA1',
     digits: '6',
     period: '30',
   });
-  return `otpauth://totp/${label}?${params.toString()}`;
+  return `otpauth://totp/${encodeURIComponent(label)}?${params.toString()}`;
 }
 
 /** Compute the 6-digit TOTP for a given secret + timestamp (ms). */
@@ -80,15 +86,15 @@ export async function generateTotp(secret, timestampMs = Date.now(), period = 30
 }
 
 /**
- * Verify a user-entered code with a ±2 step window (≈±60s tolerance).
- * A wider window than the RFC default of ±1 helps when the user's device
- * clock is slightly drifted from real time — a very common cause of TOTP
- * failures in practice.
+ * Verify a user-entered code with a ±3 step window (≈±90s tolerance).
+ * Wide window used only for prototype/demo reliability; production should use ±1.
+ * Clock drift between the user's phone and laptop is by far the most common
+ * cause of "correct code rejected" in the wild.
  */
 export async function verifyTotp(secret, code, timestampMs = Date.now()) {
   const clean = String(code).replace(/\D/g, '');
   if (clean.length !== 6) return false;
-  for (const offset of [-2, -1, 0, 1, 2]) {
+  for (const offset of [-3, -2, -1, 0, 1, 2, 3]) {
     const expected = await generateTotp(secret, timestampMs + offset * 30_000);
     if (expected === clean) {
       // eslint-disable-next-line no-console
