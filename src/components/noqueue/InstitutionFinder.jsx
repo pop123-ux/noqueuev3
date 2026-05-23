@@ -1,35 +1,43 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Clock, Globe, Users, Award, AlertCircle, ExternalLink } from 'lucide-react';
-
-function openInGoogleMaps(address) {
-  const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-  window.open(url, '_blank', 'noopener,noreferrer');
-}
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { clujInstitutions, getQueueStatus } from '@/lib/data/clujInstitutions';
 import CopyablePhoneNumber from '@/components/ui/CopyablePhoneNumber';
 
 const crowdConfig = {
-  low: { bg: 'bg-success/10', text: 'text-success', border: 'border-success/20', label: 'Short wait' },
-  medium: { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/20', label: 'Moderate wait' },
-  high: { bg: 'bg-destructive/10', text: 'text-destructive', border: 'border-destructive/20', label: 'Long wait' },
+  low:    { bg: 'bg-success/10',     text: 'text-success',     label: 'Short wait' },
+  medium: { bg: 'bg-warning/10',     text: 'text-warning',     label: 'Moderate wait' },
+  high:   { bg: 'bg-destructive/10', text: 'text-destructive', label: 'Long wait' },
 };
 
 const categories = ['All', ...new Set(clujInstitutions.map(i => i.categoryLabel))];
 
-function InstitutionCard({ inst, isBest, onClick }) {
+function InstitutionCard({ inst, isBest, onViewMap }) {
   const [expanded, setExpanded] = useState(false);
   const crowd = crowdConfig[inst.crowd];
   const status = getQueueStatus(inst.queue);
+
+  function handleViewMap(e) {
+    e.stopPropagation();
+    onViewMap?.(inst);
+    setTimeout(() => {
+      document.getElementById('map')?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
+  }
+
+  function handleGoogleMaps(e) {
+    e.stopPropagation();
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(inst.address)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className={`glass-card rounded-2xl overflow-hidden hover:border-white/10 transition-all ${isBest ? 'glow-green' : ''} cursor-pointer`}
+      className={`glass-card rounded-2xl overflow-hidden hover:border-white/10 transition-all cursor-pointer ${isBest ? 'glow-green' : ''}`}
       onClick={() => setExpanded(!expanded)}
     >
       <div className="p-5">
@@ -49,9 +57,7 @@ function InstitutionCard({ inst, isBest, onClick }) {
             <h3 className="text-sm font-semibold text-white leading-snug">{inst.name}</h3>
           </div>
           <div className="text-right shrink-0">
-            <div className={`text-sm font-bold`} style={{ color: status.color }}>
-              ~{inst.queue.current}m
-            </div>
+            <div className="text-sm font-bold" style={{ color: status.color }}>~{inst.queue.current}m</div>
             <div className="text-[10px] text-slate-500">{status.label}</div>
           </div>
         </div>
@@ -61,7 +67,7 @@ function InstitutionCard({ inst, isBest, onClick }) {
           <span className="truncate">{inst.address}</span>
         </div>
 
-        <div className="flex items-center gap-2 text-[10px]">
+        <div className="flex flex-wrap items-center gap-2 text-[10px]">
           {inst.onlineServices && (
             <span className="flex items-center gap-1 text-success bg-success/10 px-2 py-0.5 rounded-full">
               <Globe className="w-3 h-3" /> Online
@@ -92,18 +98,26 @@ function InstitutionCard({ inst, isBest, onClick }) {
                 <span key={s} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-400">{s}</span>
               ))}
             </div>
-            <div className="rounded-xl bg-warning/8 border border-warning/15 px-3 py-2 text-[10px] text-warning">
+            <div className="rounded-xl px-3 py-2 text-[10px] text-warning" style={{ background: 'rgba(250,204,21,0.05)', border: '1px solid rgba(250,204,21,0.15)' }}>
               ⚠️ {inst.commonMistake}
             </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); openInGoogleMaps(inst.address); }}
-              aria-label="Open institution location in Google Maps"
-              title="Open external navigation"
-              className="w-full py-2 rounded-xl bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 active:scale-95 transition-all flex items-center justify-center gap-1.5"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              Open in Google Maps
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handleViewMap}
+                className="py-2 rounded-xl bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 active:scale-95 transition-all"
+              >
+                View on map →
+              </button>
+              <button
+                onClick={handleGoogleMaps}
+                aria-label="Open institution location in Google Maps"
+                title="Open external navigation"
+                className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 text-slate-300 text-xs font-medium hover:bg-white/10 active:scale-95 transition-all"
+              >
+                <ExternalLink className="w-3 h-3" />
+                Google Maps
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -118,10 +132,12 @@ export default function InstitutionFinder({ onSelectInstitution }) {
   const bestNow = [...clujInstitutions].sort((a, b) => a.queue.current - b.queue.current)[0];
 
   const filtered = clujInstitutions.filter(inst => {
+    const q = search.toLowerCase();
     const matchSearch = search === '' ||
-      inst.name.toLowerCase().includes(search.toLowerCase()) ||
-      inst.services.some(s => s.toLowerCase().includes(search.toLowerCase())) ||
-      inst.district?.toLowerCase().includes(search.toLowerCase());
+      inst.name.toLowerCase().includes(q) ||
+      inst.services.some(s => s.toLowerCase().includes(q)) ||
+      inst.district?.toLowerCase().includes(q) ||
+      inst.categoryLabel?.toLowerCase().includes(q);
     const matchCategory = category === 'All' || inst.categoryLabel === category;
     return matchSearch && matchCategory;
   });
@@ -145,7 +161,7 @@ export default function InstitutionFinder({ onSelectInstitution }) {
         <div className="relative max-w-md mx-auto mb-5">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <Input
-            placeholder="Search by name, service, or district..."
+            placeholder="Search by name, service, district..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-10 bg-navy-700 border-white/10 text-white placeholder:text-slate-500 rounded-xl h-11"
@@ -174,7 +190,7 @@ export default function InstitutionFinder({ onSelectInstitution }) {
               key={inst.id}
               inst={inst}
               isBest={inst.id === bestNow?.id}
-              onClick={onSelectInstitution}
+              onViewMap={onSelectInstitution}
             />
           ))}
         </div>
