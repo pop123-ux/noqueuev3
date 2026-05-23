@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Zap, Briefcase, User, Shield, FolderOpen, Globe2 } from 'lucide-react';
+import { Menu, X, Zap, Briefcase, User, Shield, FolderOpen, Globe2, FileSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navLinks = [
@@ -46,6 +46,11 @@ export default function Navbar() {
               <FolderOpen className="w-3.5 h-3.5 text-accent" />
               <span className="text-accent">Vault</span>
             </Link>
+            <Link to="/smart-doc" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
+              <FileSearch className="w-3.5 h-3.5" />
+              Smart Doc
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-accent/20 text-accent font-bold">NEW</span>
+            </Link>
             <Link to="/move-to-romania" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
               <Globe2 className="w-3.5 h-3.5" />
               Move to RO
@@ -84,6 +89,9 @@ export default function Navbar() {
           </Link>
           <Link to="/digital-vault" onClick={() => setOpen(false)} className="block py-3 text-sm text-slate-300 hover:text-white border-b border-white/5">
             🗂️ Digital Vault
+          </Link>
+          <Link to="/smart-doc" onClick={() => setOpen(false)} className="block py-3 text-sm text-slate-300 hover:text-white border-b border-white/5">
+            🔍 Smart Doc <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-accent/20 text-accent font-bold ml-1">NEW</span>
           </Link>
           <Link to="/move-to-romania" onClick={() => setOpen(false)} className="block py-3 text-sm text-slate-300 hover:text-white border-b border-white/5">
             🌍 Move to Romania

@@ -14,6 +14,7 @@ import SmartRecommendations from '@/components/noqueue/SmartRecommendations';
 
 import DigitalRomaniaFit from '@/components/noqueue/DigitalRomaniaFit';
 import MoveToRomaniaDashboardCard from '@/components/moveToRomania/MoveToRomaniaDashboardCard';
+import SmartDocFeatureCard from '@/components/noqueue/SmartDocFeatureCard';
 import Footer from '@/components/noqueue/Footer';
 
 export default function Home() {
@@ -53,6 +54,9 @@ export default function Home() {
 
       {/* AI Chat — main experience */}
       <NoQueueAIChat onWorkflowDetected={handleWorkflowDetected} />
+
+      {/* Smart Document Intelligence — NoQueue AI 2.0 feature */}
+      <SmartDocFeatureCard />
 
       {/* Dynamic checklist updates after chat interaction */}
       <div id="checklist">
