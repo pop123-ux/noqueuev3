@@ -136,27 +136,27 @@ export async function buildSupportSheet({ template, profile, caseData, missingFi
     y -= 13;
   };
 
-  sectionHeader('Applicant — Date personale');
+  sectionHeader('Applicant - Date personale');
   fieldRow('Nume / Last name',    norm.last_name,    missingFields.includes('last_name'));
   fieldRow('Prenume / First name', norm.first_name,   missingFields.includes('first_name'));
   fieldRow('CNP',                  norm.cnp,          missingFields.includes('cnp'));
-  fieldRow('Data nașterii',        norm.birth_date,   missingFields.includes('birth_date'));
-  fieldRow('Locul nașterii',       norm.birth_place,  missingFields.includes('birth_place'));
-  fieldRow('Tatăl',                norm.father_name,  false);
+  fieldRow('Data nasterii',        norm.birth_date,   missingFields.includes('birth_date'));
+  fieldRow('Locul nasterii',       norm.birth_place,  missingFields.includes('birth_place'));
+  fieldRow('Tatal',                norm.father_name,  false);
   fieldRow('Mama',                 norm.mother_name,  false);
   fieldRow('Seria / Nr. CI',       norm.id_series_number, missingFields.includes('id_series'));
   fieldRow('Valabilitate CI',      norm.id_expiry_date, false);
-  fieldRow('Eliberată de',         norm.id_issued_by, false);
+  fieldRow('Eliberata de',         norm.id_issued_by, false);
 
   sectionHeader('Contact & Domiciliu');
-  fieldRow('Adresă',               norm.address_line_1,  missingFields.includes('address_line_1'));
+  fieldRow('Adresa',               norm.address_line_1,  missingFields.includes('address_line_1'));
   fieldRow('Localitate',           norm.city,            missingFields.includes('city'));
-  fieldRow('Județ',                norm.county,          false);
+  fieldRow('Judet',                norm.county,          false);
   fieldRow('Email',                norm.email,           false);
   fieldRow('Telefon',              norm.phone,           false);
 
   // ── Procedure info ─────────────────────────────────────────
-  sectionHeader(`Procedura — ${safe(template.institution)}`);
+  sectionHeader(`Procedura - ${safe(template.institution)}`);
   y = drawWrapped(page, safe(`Instructiuni: ${template.instructionsShort || '-'}`), margin + 6, y, contentW - 12, 8, regular, COLORS.dark);
   y -= 4;
   if (template.onlineUrl) {
@@ -172,7 +172,7 @@ export async function buildSupportSheet({ template, profile, caseData, missingFi
 
   // ── Required attachments ───────────────────────────────────
   if (template.requiredAttachments?.length > 0) {
-    sectionHeader('Documente necesare la ghișeu');
+    sectionHeader('Documente necesare la ghiseu');
     for (const att of template.requiredAttachments) {
       page.drawText('-', { x: margin + 6, y, size: 9, font: bold, color: COLORS.blue });
       y = drawWrapped(page, safe(att), margin + 20, y, contentW - 26, 8, regular, COLORS.dark);
@@ -182,7 +182,7 @@ export async function buildSupportSheet({ template, profile, caseData, missingFi
   }
 
   // ── Status flags ───────────────────────────────────────────
-  sectionHeader('Status & Acțiuni');
+  sectionHeader('Status & Actiuni');
   const flags = [
     template.needsNotary          ? '[!] Necesita notariat' : null,
     template.needsPhysicalPresence ? '[!] Prezenta fizica obligatorie' : null,
@@ -190,6 +190,7 @@ export async function buildSupportSheet({ template, profile, caseData, missingFi
     template.needsManualReview     ? '[!] Necesita verificare manuala' : null,
     template.signatureMode === 'required' ? '[!] Semnatura obligatorie' : null,
     template.photoMode === 'required'     ? '[!] Fotografie necesara' : null,
+    // note: all strings above are ASCII-safe already
   ].filter(Boolean);
 
   for (const flag of flags) {
