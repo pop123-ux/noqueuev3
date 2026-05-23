@@ -4,17 +4,19 @@ import { retrieveDocuments } from './civicDocuments';
 
 /**
  * Cluj-Focused Chat Engine
- * 
- * Current: Intelligent mock responses with pattern matching
- * Future: Replace callAI() with POST /api/chat → OpenAI GPT-4o or Claude
- * 
- * Architecture ready for:
- * - OpenAI API (OPENAI_API_KEY)
- * - Claude API
- * - Supabase RAG retrieval
- * - OCR document scanning
- * - Appointment booking APIs
+ *
+ * Pattern-matched structured responses grounded in:
+ *  - clujInstitutions.js  (single source of truth for institutions + queue estimates)
+ *  - workflows.js         (procedures + required documents)
+ *  - civicDocuments.js    (RAG document retrieval)
+ *
+ * All queue numbers cited in responses come from clujInstitutions and carry the
+ * "simulated estimates / crowd-reported approximations" disclaimer.
+ * Never hard-code a wait time in a response string.
  */
+
+const QUEUE_DISCLAIMER_EN = '_Queue estimates are crowd-reported approximations — check on arrival._';
+const QUEUE_DISCLAIMER_RO = '_Estimările cozilor sunt aproximări raportate de utilizatori — verifică la fața locului._';
 
 export function findBestWorkflow(message) {
   const lower = message.toLowerCase();
@@ -107,15 +109,22 @@ export function buildClujResponse(message, settings, conversationHistory = [], c
     };
   }
 
-  // Time/busy query
+  // Time/busy query — built dynamically from clujInstitutions (no hard-coded waits)
   if (intentType === 'time-query' && !workflow) {
+    const sorted = [...clujInstitutions].sort((a, b) => a.queue.current - b.queue.current);
+    const quick = sorted.filter(i => i.queue.current < 30).slice(0, 3);
+    const medium = sorted.filter(i => i.queue.current >= 30 && i.queue.current < 45).slice(0, 2);
+    const avoid = [...sorted].reverse().slice(0, 2);
+
+    const fmt = (list) => list.map((i, idx) => `${idx + 1}. **${i.name}** — ~${i.queue.current} min`).join('\n');
+
     return {
       reply: isRomanian
-        ? `Dacă ai o oră liberă azi, iată ce poți rezolva rapid:\n\n✅ **Sub 30 minute** (du-te acum):\n1. Direcția Taxe și Impozite Locale — 18 min coadă\n2. IPJ Cluj (cazier) — 20 min coadă\n3. Starea Civilă — 26 min coadă\n\n⏱️ **30-45 minute** (în funcție de orar):\n4. SPCLEP Cluj-Napoca — 24 min\n5. CJAS Cluj — 34 min\n\n**Recomandare:** Evită DRPCIV și ANAF azi — cozile sunt lungi.\n\nCe procedură trebuie să faci?`
-        : `If you have one hour today, here's what you can realistically get done:\n\n✅ **Under 30 minutes** (go now):\n1. Local Taxes Office — 18 min queue\n2. IPJ Cluj (criminal record) — 20 min queue\n3. Starea Civilă — 26 min queue\n\n⏱️ **30-45 minutes** (depending on your timing):\n4. SPCLEP Cluj-Napoca — 24 min\n5. CJAS Cluj — 34 min\n\n**Avoid today:** DRPCIV and ANAF have long queues right now.\n\nWhat procedure do you need to complete?`,
+        ? `Dacă ai o oră liberă azi, iată ce poți rezolva rapid:\n\n✅ **Sub 30 minute** (du-te acum):\n${fmt(quick) || '_Nicio instituție sub 30 min în acest moment._'}\n\n⏱️ **30-45 minute**:\n${fmt(medium) || '_Nicio instituție în acest interval._'}\n\n**Evită acum:** ${avoid.map(i => i.name).join(', ')} — cozile sunt lungi.\n\n${QUEUE_DISCLAIMER_RO}\n\nCe procedură trebuie să faci?`
+        : `If you have one hour today, here's what you can realistically get done:\n\n✅ **Under 30 minutes** (go now):\n${fmt(quick) || '_No institution under 30 min right now._'}\n\n⏱️ **30-45 minutes**:\n${fmt(medium) || '_No institution in this range._'}\n\n**Avoid now:** ${avoid.map(i => i.name).join(', ')} — long queues.\n\n${QUEUE_DISCLAIMER_EN}\n\nWhat procedure do you need to complete?`,
       type: 'time-recommendation',
       workflowId: null,
-      institutionId: null,
+      institutionId: quick[0]?.id || null,
       followUpQuestion: null,
       suggestedActions: ['Local taxes', 'Criminal record', 'Health insurance'],
     };
@@ -143,8 +152,8 @@ export function buildClujResponse(message, settings, conversationHistory = [], c
     }[tone] || '';
 
     const reply = isRomanian
-      ? `${tonePrefix}Am identificat: **${workflow.title}** 📋\n\n${workflow.description}\n\n**Documente necesare:**\n${docList}\n\n🏛️ **Instituție recomandată:**\n${inst ? `**${inst.name}**\n📍 ${inst.address}\n⏱️ Coadă estimată: ~${inst.queue.current} minute\n🕐 Cel mai bun moment: ${workflow.bestTime}` : workflow.institution}\n\n${workflow.online ? '🌐 **Disponibil parțial online** — verifică mai întâi.' : '🚶 **Vizită fizică necesară**'}\n\n⚠️ **Greșeala frecventă:** ${workflow.commonMistake}\n\n**Pași următori:**\n${nextStepsList}\n\n⏳ **Timp de procesare:** ${workflow.processingTime}\n\n---\n_⚖️ Verifică cerințele finale la instituție înainte de a depune documentele._`
-      : `${tonePrefix}I found the right procedure: **${workflow.title}** 📋\n\n${workflow.description}\n\n**Required documents:**\n${docList}\n\n🏛️ **Recommended institution:**\n${inst ? `**${inst.name}**\n📍 ${inst.address}\n⏱️ Estimated queue: ~${inst.queue.current} minutes\n🕐 Best visiting time: ${workflow.bestTime}` : workflow.institution}\n\n${workflow.online ? '🌐 **Partially available online** — check this first before visiting.' : '🚶 **In-person visit required**'}\n\n⚠️ **Common mistake:** ${workflow.commonMistake}\n\n**Next steps:**\n${nextStepsList}\n\n⏳ **Processing time:** ${workflow.processingTime}\n\n---\n_⚖️ Please verify final requirements with the official institution before submitting._`;
+      ? `${tonePrefix}Am identificat: **${workflow.title}** 📋\n\n${workflow.description}\n\n**Documente necesare:**\n${docList}\n\n🏛️ **Instituție recomandată:**\n${inst ? `**${inst.name}**\n📍 ${inst.address}\n⏱️ Coadă estimată: ~${inst.queue.current} minute\n🕐 Cel mai bun moment: ${workflow.bestTime}\n\n${QUEUE_DISCLAIMER_RO}` : workflow.institution}\n\n${workflow.online ? '🌐 **Disponibil parțial online** — verifică mai întâi.' : '🚶 **Vizită fizică necesară**'}\n\n⚠️ **Greșeala frecventă:** ${workflow.commonMistake}\n\n**Pași următori:**\n${nextStepsList}\n\n⏳ **Timp de procesare:** ${workflow.processingTime}\n\n---\n_⚖️ Verifică cerințele finale la instituție înainte de a depune documentele._`
+      : `${tonePrefix}I found the right procedure: **${workflow.title}** 📋\n\n${workflow.description}\n\n**Required documents:**\n${docList}\n\n🏛️ **Recommended institution:**\n${inst ? `**${inst.name}**\n📍 ${inst.address}\n⏱️ Estimated queue: ~${inst.queue.current} minutes\n🕐 Best visiting time: ${workflow.bestTime}\n\n${QUEUE_DISCLAIMER_EN}` : workflow.institution}\n\n${workflow.online ? '🌐 **Partially available online** — check this first before visiting.' : '🚶 **In-person visit required**'}\n\n⚠️ **Common mistake:** ${workflow.commonMistake}\n\n**Next steps:**\n${nextStepsList}\n\n⏳ **Processing time:** ${workflow.processingTime}\n\n---\n_⚖️ Please verify final requirements with the official institution before submitting._`;
 
     // Retrieve civic documents for this workflow
     const retrievedDocs = retrieveDocuments(message, workflow.id);

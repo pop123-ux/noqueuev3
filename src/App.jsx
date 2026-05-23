@@ -17,7 +17,8 @@ import IdentityVault from './pages/IdentityVault';
 import DigitalVault from './pages/DigitalVault';
 import PassportDemo from './pages/PassportDemo';
 import MoveToRomania from './pages/MoveToRomania';
-import OnboardingGate from './components/auth/OnboardingGate';
+// TODO: re-enable for production — OnboardingGate is intentionally bypassed in DEMO MODE.
+// import OnboardingGate from './components/auth/OnboardingGate';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -63,7 +64,8 @@ const AuthenticatedApp = () => {
     }
   }
 
-  // DEMO MODE: onboarding gate bypassed temporarily
+  // DEMO MODE: OnboardingGate intentionally bypassed.
+  // TODO: re-enable for production by uncommenting the import above and the block below.
   // if (user && !profile?.onboarding_completed) {
   //   return <OnboardingGate user={user} onComplete={fetchProfile} />;
   // }

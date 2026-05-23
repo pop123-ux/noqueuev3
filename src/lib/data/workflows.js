@@ -12,7 +12,7 @@ const workflows = [
       "Existing document copy if available"
     ],
     institution: "Direcția de Evidență a Persoanelor Cluj",
-    institutionId: "dep-cluj",
+    institutionId: "spclep-cluj",
     queue: 24,
     bestTime: "Tuesday–Thursday, 09:00–11:00",
     commonMistake: "Proof of residence is missing or outdated.",
@@ -34,7 +34,7 @@ const workflows = [
       "Application form"
     ],
     institution: "Direcția de Evidență a Persoanelor Cluj",
-    institutionId: "dep-cluj",
+    institutionId: "spclep-cluj",
     queue: 22,
     bestTime: "Tuesday–Thursday, 09:00–11:00",
     commonMistake: "People forget civil status documents after marriage/divorce.",
@@ -55,7 +55,7 @@ const workflows = [
       "Application form"
     ],
     institution: "Direcția de Evidență a Persoanelor Cluj",
-    institutionId: "dep-cluj",
+    institutionId: "spclep-cluj",
     queue: 28,
     bestTime: "Wednesday, 10:00–12:00",
     commonMistake: "Owner approval is missing when renting.",
