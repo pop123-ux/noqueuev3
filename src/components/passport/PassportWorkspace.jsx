@@ -48,21 +48,39 @@ function Section({ title, icon: SectionIcon, color = 'text-primary', children, d
   );
 }
 
-function FieldEditor({ fields, onChange }) {
-  const labels = {
-    full_name: 'Nume complet', first_name: 'Prenume', last_name: 'Nume familie',
-    cnp: 'CNP', birth_date: 'Data nasterii', birth_place: 'Locul nasterii',
-    father_name: 'Numele tatalui', mother_name: 'Numele mamei',
-    id_series: 'Seria CI', id_number: 'Numarul CI',
-    address: 'Adresa', city: 'Localitate', county: 'Judet',
-    phone: 'Telefon', email: 'Email', citizenship: 'Cetatenie',
-  };
+const EYE_COLOR_OPTIONS = ['Căprui','Albaștri','Verzi','Negri','Gri','Căprui-verzui','Hazel','Altele'];
 
+const FIELD_DEFS = [
+  { key: 'full_name',    label: 'Nume complet',      type: 'text' },
+  { key: 'first_name',   label: 'Prenume',            type: 'text' },
+  { key: 'last_name',    label: 'Nume familie',       type: 'text' },
+  { key: 'cnp',          label: 'CNP',                type: 'text' },
+  { key: 'birth_date',   label: 'Data nasterii',      type: 'text' },
+  { key: 'birth_place',  label: 'Locul nasterii',     type: 'text' },
+  { key: 'father_name',  label: 'Numele tatalui',     type: 'text' },
+  { key: 'mother_name',  label: 'Numele mamei',       type: 'text' },
+  { key: 'id_series',    label: 'Seria CI',           type: 'text' },
+  { key: 'id_number',    label: 'Numarul CI',         type: 'text' },
+  { key: 'address',      label: 'Adresa',             type: 'text' },
+  { key: 'city',         label: 'Localitate',         type: 'text' },
+  { key: 'county',       label: 'Judet',              type: 'text' },
+  { key: 'phone',        label: 'Telefon',            type: 'text' },
+  { key: 'email',        label: 'Email',              type: 'text' },
+  { key: 'citizenship',  label: 'Cetatenie',          type: 'text' },
+  { key: 'height_cm',    label: 'Înălțime (Semnalmente)', type: 'number', placeholder: '180', suffix: 'cm', min: 50, max: 250 },
+  { key: 'eye_color',    label: 'Culoarea ochilor (Semnalmente)', type: 'select', options: EYE_COLOR_OPTIONS },
+];
+
+function FieldEditor({ fields, onChange }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {Object.entries(labels).map(([key, label]) => {
-        const val = fields[key] || '';
-        const isEmpty = !val.trim();
+      {FIELD_DEFS.map(({ key, label, type, placeholder, suffix, min, max, options }) => {
+        const val = fields[key] ?? '';
+        const isEmpty = type === 'select' ? !val : !String(val).trim();
+        const inputStyle = {
+          background: isEmpty ? 'rgba(250,204,21,0.06)' : 'rgba(255,255,255,0.04)',
+          border: isEmpty ? '1px solid rgba(250,204,21,0.25)' : '1px solid rgba(255,255,255,0.08)',
+        };
         return (
           <div key={key}>
             <label className="text-[10px] font-semibold uppercase tracking-wider mb-1 flex items-center gap-1.5"
@@ -71,16 +89,31 @@ function FieldEditor({ fields, onChange }) {
               {label}
               {isEmpty && <span className="text-[9px] text-warning font-normal normal-case">— lipsa din Seif</span>}
             </label>
-            <input
-              value={val}
-              onChange={e => onChange(key, e.target.value)}
-              placeholder={isEmpty ? 'Completeaza manual...' : ''}
-              className="w-full text-sm px-3 py-2 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 transition-all"
-              style={{
-                background: isEmpty ? 'rgba(250,204,21,0.06)' : 'rgba(255,255,255,0.04)',
-                border: isEmpty ? '1px solid rgba(250,204,21,0.25)' : '1px solid rgba(255,255,255,0.08)',
-              }}
-            />
+
+            {type === 'select' ? (
+              <select
+                value={val}
+                onChange={e => onChange(key, e.target.value)}
+                className="w-full text-sm px-3 py-2 rounded-xl text-white focus:outline-none focus:ring-1 transition-all"
+                style={inputStyle}
+              >
+                <option value="">— Selecteaza —</option>
+                {options.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <input
+                  type={type}
+                  value={val}
+                  min={min} max={max}
+                  onChange={e => onChange(key, e.target.value)}
+                  placeholder={placeholder || (isEmpty ? 'Completeaza manual...' : '')}
+                  className="flex-1 text-sm px-3 py-2 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 transition-all"
+                  style={inputStyle}
+                />
+                {suffix && <span className="text-xs text-slate-500 shrink-0">{suffix}</span>}
+              </div>
+            )}
           </div>
         );
       })}
@@ -98,7 +131,7 @@ export default function PassportWorkspace({ profile, caseData }) {
   const { filled, missing, readiness } = matchPassportProfile(activeProfile);
   const formData = mapProfileToPassportForm(activeProfile, { isUrgent: true });
 
-  const KEY_MAP = { address: 'address_line_1', full_name: 'full_name' };
+  const KEY_MAP = { address: 'address_line_1', full_name: 'full_name', height_cm: 'height_cm', eye_color: 'eye_color' };
   const handleFieldChange = (key, value) => {
     const profileKey = KEY_MAP[key] || key;
     setEditedProfile(prev => ({ ...(prev || profile || {}), [profileKey]: value }));
@@ -235,6 +268,9 @@ export default function PassportWorkspace({ profile, caseData }) {
             county: activeProfile?.county || '',
             phone: activeProfile?.phone || '',
             email: activeProfile?.email || '',
+            citizenship: activeProfile?.citizenship || '',
+            height_cm: activeProfile?.height_cm ?? '',
+            eye_color: activeProfile?.eye_color || '',
           }} onChange={handleFieldChange} />
           <Button
             onClick={handleExport}
