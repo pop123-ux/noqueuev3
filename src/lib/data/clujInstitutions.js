@@ -54,7 +54,7 @@ export const clujInstitutions = [
     fullName: "Direcția Regim Permise de Conducere și Înmatriculare Vehicule Cluj",
     category: "vehicles",
     categoryLabel: "Driving & Vehicles",
-    address: "Str. Fabricii de Zahăr nr. 51, Cluj-Napoca",
+    address: "Strada Aviator Bădescu 7-9, 400196 Cluj-Napoca",
     district: "Florești",
     coords: [46.7801, 23.6123],
     phone: "+40 264 590 018",
