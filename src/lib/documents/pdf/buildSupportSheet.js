@@ -95,7 +95,7 @@ export async function buildSupportSheet({ template, profile, caseData, missingFi
   ];
   const boxH = 36;
   page.drawRectangle({ x: margin, y: y - boxH + 10, width: contentW, height: boxH, color: rgb(1, 0.96, 0.82), borderRadius: 4 });
-  page.drawText('⚠  IMPORTANT', { x: margin + 8, y: y - 4, size: 7.5, font: bold, color: rgb(0.6, 0.4, 0) });
+  page.drawText('! IMPORTANT', { x: margin + 8, y: y - 4, size: 7.5, font: bold, color: rgb(0.6, 0.4, 0) });
   for (let i = 0; i < disclaimerLines.length; i++) {
     page.drawText(disclaimerLines[i], { x: margin + 8, y: y - 14 - i * 10, size: 7, font: oblique, color: rgb(0.4, 0.3, 0) });
   }
@@ -170,12 +170,12 @@ export async function buildSupportSheet({ template, profile, caseData, missingFi
   // ── Status flags ───────────────────────────────────────────
   sectionHeader('Status & Acțiuni');
   const flags = [
-    template.needsNotary          ? '⚖️  Necesită notariat' : null,
-    template.needsPhysicalPresence ? '🏛️  Prezență fizică obligatorie' : null,
-    template.needsAppointment      ? '📅  Necesită programare' : null,
-    template.needsManualReview     ? '👀  Necesită verificare manuală' : null,
-    template.signatureMode === 'required' ? '✍️  Semnătură obligatorie' : null,
-    template.photoMode === 'required'     ? '📷  Fotografie necesară' : null,
+    template.needsNotary          ? '[!] Necesita notariat' : null,
+    template.needsPhysicalPresence ? '[!] Prezenta fizica obligatorie' : null,
+    template.needsAppointment      ? '[!] Necesita programare' : null,
+    template.needsManualReview     ? '[!] Necesita verificare manuala' : null,
+    template.signatureMode === 'required' ? '[!] Semnatura obligatorie' : null,
+    template.photoMode === 'required'     ? '[!] Fotografie necesara' : null,
   ].filter(Boolean);
 
   for (const flag of flags) {
@@ -186,7 +186,7 @@ export async function buildSupportSheet({ template, profile, caseData, missingFi
   if (missingFields.length > 0) {
     y -= 4;
     page.drawRectangle({ x: margin, y: y - 14, width: contentW, height: 20, color: rgb(1, 0.93, 0.93), borderRadius: 3 });
-    page.drawText(`⚠  ${missingFields.length} profile field(s) missing — complete your profile to fill these automatically.`,
+    page.drawText(`[!] ${missingFields.length} profile field(s) missing - complete your profile to fill these automatically.`,
       { x: margin + 6, y: y - 6, size: 8, font: bold, color: COLORS.red });
     y -= 24;
   }
