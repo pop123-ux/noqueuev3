@@ -79,14 +79,25 @@ export async function generateTotp(secret, timestampMs = Date.now(), period = 30
   return String(code % 10 ** digits).padStart(digits, '0');
 }
 
-/** Verify a user-entered code with a ±1 step window (≈30s tolerance). */
+/**
+ * Verify a user-entered code with a ±2 step window (≈±60s tolerance).
+ * A wider window than the RFC default of ±1 helps when the user's device
+ * clock is slightly drifted from real time — a very common cause of TOTP
+ * failures in practice.
+ */
 export async function verifyTotp(secret, code, timestampMs = Date.now()) {
   const clean = String(code).replace(/\D/g, '');
   if (clean.length !== 6) return false;
-  for (const offset of [-1, 0, 1]) {
+  for (const offset of [-2, -1, 0, 1, 2]) {
     const expected = await generateTotp(secret, timestampMs + offset * 30_000);
-    if (expected === clean) return true;
+    if (expected === clean) {
+      // eslint-disable-next-line no-console
+      console.debug('[TOTP] verified', { offsetSteps: offset });
+      return true;
+    }
   }
+  // eslint-disable-next-line no-console
+  console.debug('[TOTP] code did not match any step in window', { entered: clean });
   return false;
 }
 
