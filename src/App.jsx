@@ -12,6 +12,7 @@ import AppointmentWatchPage from './pages/AppointmentWatch';
 import Profile from './pages/Profile.jsx';
 import Onboarding from './pages/Onboarding';
 import IdentityVault from './pages/IdentityVault';
+import DigitalVault from './pages/DigitalVault';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -47,6 +48,7 @@ const AuthenticatedApp = () => {
       <Route path="/profile" element={<Profile />} />
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/vault" element={<IdentityVault />} />
+      <Route path="/digital-vault" element={<DigitalVault />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
