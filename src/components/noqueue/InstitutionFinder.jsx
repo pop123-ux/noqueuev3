@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Clock, Globe, Users, Award, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { clujInstitutions, getQueueStatus } from '@/lib/data/clujInstitutions';
-import CopyablePhoneNumber from '@/components/noqueue/CopyablePhoneNumber';
+import CopyablePhoneNumber from '@/components/ui/CopyablePhoneNumber';
 
 const crowdConfig = {
   low: { bg: 'bg-success/10', text: 'text-success', border: 'border-success/20', label: 'Short wait' },

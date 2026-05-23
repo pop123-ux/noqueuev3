@@ -11,7 +11,7 @@ import InstitutionFinder from '@/components/noqueue/InstitutionFinder';
 import ClujMap from '@/components/noqueue/ClujMap';
 import QueueIntelligence from '@/components/noqueue/QueueIntelligence';
 import SmartRecommendations from '@/components/noqueue/SmartRecommendations';
-import DocumentRetrieval from '@/components/noqueue/DocumentRetrieval.jsx';
+import DocumentRetrieval from '@/components/noqueue/DocumentRetrieval';
 import DigitalRomaniaFit from '@/components/noqueue/DigitalRomaniaFit';
 import Footer from '@/components/noqueue/Footer';
 
