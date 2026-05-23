@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, MapPin, Clock, Phone, Globe, Users, Award, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, MapPin, Clock, Globe, Users, Award, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { clujInstitutions, getQueueStatus } from '@/lib/data/clujInstitutions';
+import CopyablePhoneNumber from '@/components/noqueue/CopyablePhoneNumber';
 
 const crowdConfig = {
   low: { bg: 'bg-success/10', text: 'text-success', border: 'border-success/20', label: 'Short wait' },
@@ -80,10 +80,7 @@ function InstitutionCard({ inst, isBest, onClick }) {
                 <span className="text-slate-600">· Sat {inst.hours.saturday}</span>
               )}
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-400">
-              <Phone className="w-3.5 h-3.5 text-slate-500" />
-              <span>{inst.phone}</span>
-            </div>
+            <CopyablePhoneNumber phone={inst.phone} />
             <div className="flex flex-wrap gap-1">
               {inst.services.slice(0, 4).map(s => (
                 <span key={s} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-400">{s}</span>
