@@ -6,7 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, FileText, AlertTriangle, X, ExternalLink } from 'lucide-react';
+import { Plus, Search, AlertTriangle, X, ExternalLink } from 'lucide-react';
 import { getExpiryInfo } from '@/components/vault/ExpirationBadge';
 import UploadModal from '@/components/vault/UploadModal';
 
@@ -131,6 +131,7 @@ function DocCard({ doc, onDelete }) {
 export default function DocumentsTab() {
   const [user, setUser] = useState(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [search, setSearch] = useState('');
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -150,6 +151,16 @@ export default function DocumentsTab() {
 
   const enriched = docs.map(doc => ({ ...doc, _expiryInfo: getExpiryInfo(doc.expiry_date) }));
   const expiringSoon = enriched.filter(d => d._expiryInfo?.status === 'expiring_soon' || d._expiryInfo?.status === 'soon').length;
+
+  const filtered = search.trim()
+    ? enriched.filter(doc => {
+        const q = search.toLowerCase();
+        const name = (doc.document_title || '').toLowerCase();
+        const type = (TYPE_LABELS[doc.document_type] || doc.document_type || '').toLowerCase();
+        const status = doc._expiryInfo?.status || 'valid';
+        return name.includes(q) || type.includes(q) || status.includes(q) || 'expir'.includes(q.slice(0,5)) && (status === 'expired' || status === 'expiring_soon' || status === 'soon');
+      })
+    : enriched;
 
   return (
     <div className="flex flex-col h-full" style={{ background: '#0A0A0F' }}>
@@ -174,6 +185,24 @@ export default function DocumentsTab() {
             <span style={{ color: '#facc15' }}> · {expiringSoon} expiră curând</span>
           )}
         </p>
+
+        {/* Search box */}
+        <div className="relative mt-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search your documents..."
+            className="w-full pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-slate-600 rounded-xl focus:outline-none transition-all"
+            style={{
+              background: '#0A0A0F',
+              border: '1px solid #1E1E2E',
+            }}
+            onFocus={e => e.target.style.borderColor = '#3B82F6'}
+            onBlur={e => e.target.style.borderColor = '#1E1E2E'}
+          />
+        </div>
       </div>
 
       {/* Document list */}
@@ -182,7 +211,7 @@ export default function DocumentsTab() {
           <div className="flex items-center justify-center h-40">
             <div className="w-7 h-7 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#3B82F6', borderTopColor: 'transparent' }} />
           </div>
-        ) : enriched.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -210,7 +239,7 @@ export default function DocumentsTab() {
           </motion.div>
         ) : (
           <AnimatePresence>
-            {enriched.map(doc => (
+            {filtered.map(doc => (
               <DocCard
                 key={doc.id}
                 doc={doc}
