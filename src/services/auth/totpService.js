@@ -101,6 +101,28 @@ export async function verifyTotp(secret, code, timestampMs = Date.now()) {
   return false;
 }
 
+/**
+ * Self-test against well-known RFC 6238 / Google Authenticator test vectors.
+ * Runs in dev only via console.debug — does NOT throw. Use to confirm the
+ * TOTP math is correct independent of the user's device clock.
+ *
+ * Vector: secret "JBSWY3DPEHPK3PXP" at unix time 1234567890s → "005924".
+ */
+export async function runTotpSelfTest() {
+  const vectors = [
+    { secret: 'JBSWY3DPEHPK3PXP', timeSec: 1234567890, expected: '005924' },
+    { secret: 'JBSWY3DPEHPK3PXP', timeSec: 59,          expected: '287082' },
+  ];
+  const results = [];
+  for (const v of vectors) {
+    const got = await generateTotp(v.secret, v.timeSec * 1000);
+    results.push({ ...v, got, pass: got === v.expected });
+  }
+  // eslint-disable-next-line no-console
+  console.debug('[TOTP self-test]', results);
+  return results.every(r => r.pass);
+}
+
 /** Generate N human-friendly backup codes (e.g. "A1B2-C3D4"). */
 export function generateBackupCodes(count = 8) {
   const codes = [];

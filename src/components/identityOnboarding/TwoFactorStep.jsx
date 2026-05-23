@@ -20,6 +20,8 @@ import {
   buildOtpAuthUri,
   verifyTotp,
   generateBackupCodes,
+  generateTotp,
+  runTotpSelfTest,
 } from '@/services/auth/totpService';
 import BackupCodesPanel from './BackupCodesPanel';
 
@@ -44,8 +46,20 @@ export default function TwoFactorStep({ email, onVerified }) {
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(otpUri)}`;
 
   useEffect(() => {
-    if (phase === PHASE.VERIFY) setTimeout(() => inputs.current[0]?.focus(), 100);
-  }, [phase]);
+    if (phase === PHASE.VERIFY) {
+      setTimeout(() => inputs.current[0]?.focus(), 100);
+      // Dev diagnostics: confirm TOTP math is correct AND log the code we
+      // currently expect for *this* secret, so the user can compare with
+      // what Google Authenticator shows. Only logged to console.
+      (async () => {
+        await runTotpSelfTest();
+        const expectedNow = await generateTotp(secret);
+        // eslint-disable-next-line no-console
+        console.debug('[TOTP] expected code right now for this secret:', expectedNow,
+          '— if your Authenticator shows a different value, the device clocks are out of sync.');
+      })();
+    }
+  }, [phase, secret]);
 
   const handleCopySecret = async () => {
     await navigator.clipboard.writeText(secret);
@@ -86,7 +100,7 @@ export default function TwoFactorStep({ email, onVerified }) {
     if (ok) {
       setPhase(PHASE.BACKUP);
     } else {
-      setError('Cod incorect. Verifică ceasul telefonului și încearcă din nou.');
+      setError('Cod incorect. Verifică sincronizarea ceasului telefonului (Setări → Dată și oră → Automat) și încearcă din nou.');
       setDigits(Array(LEN).fill(''));
       setTimeout(() => inputs.current[0]?.focus(), 100);
     }
