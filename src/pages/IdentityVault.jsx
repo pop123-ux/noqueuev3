@@ -271,6 +271,29 @@ export default function IdentityVault() {
                   </select>
                 </div>
 
+                {/* Numele părinților — folosite la auto-completarea cererii de pașaport */}
+                <div className="pt-3 mt-3 border-t border-white/5">
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <User className="w-3.5 h-3.5 text-accent" />
+                    <p className="text-xs font-semibold text-white">Numele părinților</p>
+                    <span className="text-[10px] text-slate-500">— folosite la pașaport</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field
+                      label="Prenumele tatălui"
+                      value={profileData.father_name}
+                      onChange={v => setProfileData(p => ({ ...p, father_name: v }))}
+                      placeholder="Ion"
+                    />
+                    <Field
+                      label="Prenumele mamei"
+                      value={profileData.mother_name}
+                      onChange={v => setProfileData(p => ({ ...p, mother_name: v }))}
+                      placeholder="Maria"
+                    />
+                  </div>
+                </div>
+
                 {/* Semnalmente — folosite la auto-completarea cererii de pașaport */}
                 <div className="pt-3 mt-3 border-t border-white/5">
                   <div className="flex items-center gap-1.5 mb-3">
