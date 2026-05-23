@@ -8,6 +8,7 @@
 import React, { useState } from 'react';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { mapProfileToPassportForm } from '@/services/documents/passportFieldMapper';
+import { getHeight, getEyeColor } from '@/lib/profile/profileBiometricSelector';
 
 // ── Primitives ─────────────────────────────────────────────────────
 
@@ -87,7 +88,13 @@ function SectionHeader({ children }) {
 
 export default function StructuredPassportPreview({ profile, options = {} }) {
   const [zoom, setZoom] = useState(1);
-  const data = mapProfileToPassportForm(profile, options);
+  // Apply biometric defaults for preview
+  const profileWithDefaults = profile ? {
+    ...profile,
+    height_cm: getHeight(profile),
+    eye_color: getEyeColor(profile),
+  } : null;
+  const data = mapProfileToPassportForm(profileWithDefaults, options);
 
   return (
     <div className="space-y-3">

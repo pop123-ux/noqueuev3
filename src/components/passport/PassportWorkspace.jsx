@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { passportProcedure, matchPassportProfile } from '@/lib/rag/passportProcedure';
 import { exportStructuredPassportPdf } from '@/services/documents/passportPdfExporter';
 import { mapProfileToPassportForm } from '@/services/documents/passportFieldMapper';
+import { getHeight, getEyeColor } from '@/lib/profile/profileBiometricSelector';
 import StructuredPassportPreview from '@/components/documents/StructuredPassportPreview';
 
 function Section({ title, icon: SectionIcon, color = 'text-primary', children, defaultOpen = true, badge }) {
@@ -131,7 +132,13 @@ export default function PassportWorkspace({ profile, caseData }) {
   const [uploadingSignature, setUploadingSignature] = useState(false);
   const sigInputRef = useRef(null);
 
-  const activeProfile = editedProfile || profile;
+  // Apply biometric defaults automatically if missing from profile
+  const activeProfile = editedProfile || (profile ? {
+    ...profile,
+    height_cm: getHeight(profile),
+    eye_color: getEyeColor(profile),
+  } : null);
+  
   // Merge local signature into the profile sent to PDF exporter
   const exportProfile = localSignature?.fileUrl
     ? { ...activeProfile, signature_file_url: localSignature.fileUrl }

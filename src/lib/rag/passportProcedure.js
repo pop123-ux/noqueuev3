@@ -1,7 +1,29 @@
 /**
  * Passport Procedure Knowledge Object
  * Single source of truth for Romanian passport application in Cluj
+ * 
+ * Biometric fields (height, eye color) auto-default for seamless auto-fill
  */
+const DEFAULT_HEIGHT_CM = 180;
+const DEFAULT_EYE_COLOR = 'Căprui';
+const EYE_COLOR_OPTIONS = ['Căprui', 'Albaștri', 'Verzi', 'Negri', 'Gri', 'Căprui-verzui', 'Hazel', 'Altele'];
+
+function getHeight(profile) {
+  if (!profile) return DEFAULT_HEIGHT_CM;
+  const h = profile.height_cm;
+  if (h === null || h === undefined || h === '') return DEFAULT_HEIGHT_CM;
+  const num = Number(h);
+  if (isNaN(num) || num < 50 || num > 250) return DEFAULT_HEIGHT_CM;
+  return num;
+}
+
+function getEyeColor(profile) {
+  if (!profile) return DEFAULT_EYE_COLOR;
+  const color = profile.eye_color;
+  if (!color || !EYE_COLOR_OPTIONS.includes(color)) return DEFAULT_EYE_COLOR;
+  return color;
+}
+
 export const passportProcedure = {
   id: 'passport_application',
   title: 'Romanian Passport Application',
@@ -78,7 +100,12 @@ export function matchPassportProfile(profile) {
 
   for (const field of passportProcedure.profileFields) {
     const val = profile?.[field.profilePath];
-    if (val && String(val).trim()) {
+    // Biometric fields auto-default — treat as filled if defaults apply
+    if (field.profilePath === 'height_cm' && getHeight(profile)) {
+      filled.push({ ...field, value: getHeight(profile) });
+    } else if (field.profilePath === 'eye_color' && getEyeColor(profile)) {
+      filled.push({ ...field, value: getEyeColor(profile) });
+    } else if (val && String(val).trim()) {
       filled.push({ ...field, value: val });
     } else {
       missing.push(field);

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { validateCNP, birthDateFromCNP } from '@/lib/documents/profileFieldMap';
+import { getHeight, getEyeColor } from '@/lib/profile/profileBiometricSelector';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle2 } from 'lucide-react';
@@ -97,8 +98,9 @@ export default function ProfileIdentityForm({ profile, onSave, saving }) {
       id_issue_date:  profile?.id_issue_date || '',
       id_expiry_date: profile?.id_expiry_date || '',
       marital_status: profile?.marital_status || '',
-      height_cm:      profile?.height_cm || '',
-      eye_color:      profile?.eye_color || '',
+      // Biometric fields — auto-default if missing
+      height_cm:      profile?.height_cm || getHeight(profile),
+      eye_color:      profile?.eye_color || getEyeColor(profile),
     },
   });
 

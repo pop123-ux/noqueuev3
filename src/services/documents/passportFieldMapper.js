@@ -2,7 +2,11 @@
  * passportFieldMapper.js
  * Maps Profile Safe data to structured passport form fields
  * Based on Romanian "Cerere pentru eliberarea unui nou pasaport" (Anexa 10)
+ * 
+ * Biometric fields (height, eye color) auto-default if missing from Seif
  */
+
+import { getHeight, getEyeColor } from '@/lib/profile/profileBiometricSelector';
 
 /** Split a string into individual chars padded to length */
 export function toCharBoxes(str, length) {
@@ -95,9 +99,9 @@ export function mapProfileToPassportForm(profile, options = {}) {
   const [subD, subM, subY] = bucharestDate.split('.');
   const submissionDateBoxes = [...(subD || '').split(''), ...(subM || '').split(''), ...(subY || '').split('')];
 
-  // Height & eye color
-  const heightCm = profile?.height_cm ? String(profile.height_cm) : '';
-  const eyeColor = profile?.eye_color || '';
+  // Height & eye color — AUTO-DEFAULT if missing from Seif
+  const heightCm = String(getHeight(profile));
+  const eyeColor = getEyeColor(profile);
 
   // Signature
   const signatureUrl = profile?.signature_file_url || null;
@@ -117,8 +121,9 @@ export function mapProfileToPassportForm(profile, options = {}) {
   if (!profile?.id_number) missing.push('Nr. CI');
   if (!profile?.father_name) missing.push('Prenumele tatalui');
   if (!profile?.mother_name) missing.push('Prenumele mamei');
-  if (!heightCm) missing.push('Inaltime');
-  if (!eyeColor) missing.push('Culoarea ochilor');
+  // Biometric fields now auto-default — only show missing if user explicitly cleared them
+  if (profile?.height_cm === '' || profile?.height_cm === null) missing.push('Inaltime');
+  if (profile?.eye_color === '' || profile?.eye_color === null) missing.push('Culoarea ochilor');
   if (!signatureUrl) missing.push('Semnatura');
 
   return {
