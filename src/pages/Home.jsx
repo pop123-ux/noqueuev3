@@ -1,52 +1,78 @@
-/**
- * Home — Civic OS · 3-tab layout
- * NoQueue | Chats | Documents
- */
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import CivicNavbar from '@/components/layout/CivicNavbar';
-import NoQueueTab from '@/components/tabs/NoQueueTab';
-import ChatsTab from '@/components/tabs/ChatsTab';
-import DocumentsTab from '@/components/tabs/DocumentsTab';
-
-const TABS = [
-  { id: 'noqueue',   label: 'NoQueue' },
-  { id: 'chats',     label: 'Chats' },
-  { id: 'documents', label: 'Documente' },
-];
+import React, { useState, useCallback } from 'react';
+import workflows from '@/lib/data/workflows';
+import { clujInstitutions } from '@/lib/data/clujInstitutions';
+import Navbar from '@/components/noqueue/Navbar';
+import Hero from '@/components/noqueue/Hero';
+import ProblemCards from '@/components/noqueue/ProblemCards';
+import NoQueueAIChat from '@/components/noqueue/NoQueueAIChat';
+import DocumentChecklist from '@/components/noqueue/DocumentChecklist';
+import WorkflowCards from '@/components/noqueue/WorkflowCards';
+import InstitutionFinder from '@/components/noqueue/InstitutionFinder';
+import ClujMap from '@/components/noqueue/ClujMap';
+import QueueIntelligence from '@/components/noqueue/QueueIntelligence';
+import SmartRecommendations from '@/components/noqueue/SmartRecommendations';
+import DocumentRetrieval from '@/components/noqueue/DocumentRetrieval';
+import DigitalRomaniaFit from '@/components/noqueue/DigitalRomaniaFit';
+import Footer from '@/components/noqueue/Footer';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('noqueue');
+  const [selectedWorkflow, setSelectedWorkflow] = useState(null);
+  const [selectedInstitution, setSelectedInstitution] = useState(null);
+
+  const handleSelectWorkflow = useCallback((wf) => {
+    setSelectedWorkflow(wf);
+    setTimeout(() => {
+      document.getElementById('checklist')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  }, []);
+
+  const handleWorkflowDetected = useCallback(({ workflowId, institutionId }) => {
+    if (workflowId) {
+      const wf = workflows.find(w => w.id === workflowId);
+      if (wf) setSelectedWorkflow(wf);
+    }
+    if (institutionId) {
+      const inst = clujInstitutions.find(i => i.id === institutionId);
+      if (inst) setSelectedInstitution(inst);
+    }
+  }, []);
+
+  const handleSelectInstitution = useCallback((inst) => {
+    setSelectedInstitution(inst);
+    setTimeout(() => {
+      document.getElementById('map')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  }, []);
 
   return (
-    <div className="min-h-screen font-inter" style={{ background: '#0B0F19', color: '#f8fafc' }}>
-      <CivicNavbar activeTab={activeTab} onTabChange={setActiveTab} />
+    <div className="min-h-screen bg-background text-foreground font-inter">
+      <Navbar />
+      <Hero />
+      <ProblemCards />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-24 pb-20">
-        <AnimatePresence mode="wait">
-          {activeTab === 'noqueue' && (
-            <motion.div key="noqueue"
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.2 }}>
-              <NoQueueTab />
-            </motion.div>
-          )}
-          {activeTab === 'chats' && (
-            <motion.div key="chats"
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.2 }}>
-              <ChatsTab />
-            </motion.div>
-          )}
-          {activeTab === 'documents' && (
-            <motion.div key="documents"
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.2 }}>
-              <DocumentsTab />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
+      {/* AI Chat — main experience */}
+      <NoQueueAIChat onWorkflowDetected={handleWorkflowDetected} />
+
+      {/* Dynamic checklist updates after chat interaction */}
+      <div id="checklist">
+        <DocumentChecklist workflow={selectedWorkflow} />
+      </div>
+
+      <WorkflowCards onSelectWorkflow={handleSelectWorkflow} />
+
+      <InstitutionFinder onSelectInstitution={handleSelectInstitution} />
+
+      {/* Premium Cluj Map */}
+      <ClujMap
+        selectedInstitution={selectedInstitution}
+        onSelectInstitution={handleSelectInstitution}
+      />
+
+      <QueueIntelligence />
+      <DocumentRetrieval />
+      <SmartRecommendations />
+      <DigitalRomaniaFit />
+      <Footer />
     </div>
   );
 }

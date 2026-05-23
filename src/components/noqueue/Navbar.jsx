@@ -1,72 +1,102 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, User } from 'lucide-react';
-import OthersDropdown from '@/components/layout/OthersDropdown';
-import { base44 } from '@/api/base44Client';
+import { Menu, X, Zap, Briefcase, Bell, User, Shield, FolderOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+const navLinks = [
+  { label: 'Chat', href: '#chat' },
+  { label: 'Documents', href: '#documents' },
+  { label: 'Workflows', href: '#workflows' },
+  { label: 'Institutions', href: '#institutions' },
+  { label: 'Map', href: '#map' },
+];
 
 export default function Navbar() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
+  const [open, setOpen] = useState(false);
 
   return (
-    <nav
-      className="fixed top-0 left-0 right-0 z-50"
-      style={{
-        background: 'rgba(11, 15, 25, 0.88)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
-      }}
-    >
-      <div className="max-w-5xl mx-auto px-5 sm:px-8">
-        <div className="flex items-center justify-between h-14">
-
-          {/* LEFT — Brand */}
-          <Link to="/" className="flex items-center gap-2.5 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 rounded-lg">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)' }}
-            >
-              <Zap className="w-3.5 h-3.5 text-white" />
+    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <a href="#" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <Zap className="w-4 h-4 text-white" />
             </div>
-            <span className="text-sm font-bold text-white tracking-tight">NoQueue</span>
-            <span
-              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full hidden sm:inline"
-              style={{
-                color: '#60a5fa',
-                background: 'rgba(37,99,235,0.12)',
-                border: '1px solid rgba(37,99,235,0.25)',
-              }}
-            >
-              ClujHackathon2026
-            </span>
-          </Link>
+            <span className="text-lg font-bold text-white">NoQueue</span>
+            <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">Cluj</span>
+          </a>
 
-          {/* RIGHT — Actions */}
-          <div className="flex items-center gap-1">
-            <OthersDropdown />
-
-            {/* User avatar */}
-            <Link
-              to="/profile"
-              aria-label="Profil utilizator"
-              className="w-8 h-8 rounded-lg flex items-center justify-center ml-1 text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/50"
-            >
-              {user?.full_name ? (
-                <span className="text-xs font-bold text-white">
-                  {user.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                </span>
-              ) : (
-                <User className="w-4 h-4" />
-              )}
+          <div className="hidden md:flex items-center gap-1">
+            {navLinks.map(link => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+              >
+                {link.label}
+              </a>
+            ))}
+            <Link to="/cases" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
+              <Briefcase className="w-3.5 h-3.5" />
+              My Cases
+            </Link>
+            <Link to="/appointments/watch" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
+              <Bell className="w-3.5 h-3.5" />
+              Alerts
+            </Link>
+            <Link to="/vault" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5" />
+              Seif
+            </Link>
+            <Link to="/digital-vault" className="px-3 py-2 text-sm text-white font-semibold transition-colors rounded-lg bg-accent/10 border border-accent/20 hover:bg-accent/20 flex items-center gap-1.5">
+              <FolderOpen className="w-3.5 h-3.5 text-accent" />
+              <span className="text-accent">Vault</span>
+            </Link>
+            <Link to="/profile" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5" />
+              Cont
+            </Link>
+            <Link to="/start">
+              <Button size="sm" className="ml-3 bg-primary hover:bg-primary/90 text-white rounded-xl">
+                Start a Case
+              </Button>
             </Link>
           </div>
 
+          <button className="md:hidden text-white" onClick={() => setOpen(!open)}>
+            {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
       </div>
+
+      {open && (
+        <div className="md:hidden glass border-t border-white/5 px-4 pb-4">
+          {navLinks.map(link => (
+            <a
+              key={link.href}
+              href={link.href}
+              onClick={() => setOpen(false)}
+              className="block py-3 text-sm text-slate-300 hover:text-white border-b border-white/5"
+            >
+              {link.label}
+            </a>
+          ))}
+          <Link to="/cases" onClick={() => setOpen(false)} className="block py-3 text-sm text-slate-300 hover:text-white border-b border-white/5">
+            My Cases
+          </Link>
+          <Link to="/appointments/watch" onClick={() => setOpen(false)} className="block py-3 text-sm text-slate-300 hover:text-white border-b border-white/5">
+            Appointment Alerts
+          </Link>
+          <Link to="/digital-vault" onClick={() => setOpen(false)} className="block py-3 text-sm text-slate-300 hover:text-white border-b border-white/5">
+            🗂️ Digital Vault
+          </Link>
+          <Link to="/start" onClick={() => setOpen(false)}>
+            <Button className="mt-3 w-full bg-primary hover:bg-primary/90 text-white rounded-xl">
+              Start a Case
+            </Button>
+          </Link>
+        </div>
+      )}
     </nav>
   );
 }
