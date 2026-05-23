@@ -20,6 +20,7 @@ import {
   ONLINE_RESOURCES,
   PASSPORT_LOSS_STEPS,
 } from '@/lib/documents/passportLossWorkflow';
+import DeclarationDownloadCard from '@/components/passport/DeclarationDownloadCard';
 
 // ── Step Progress Bar ──────────────────────────────────────────────────────
 function StepProgress({ currentStep }) {
@@ -279,14 +280,20 @@ function DocChecklist({ docs, vaultProfile }) {
 }
 
 // ── Declaration Preview ────────────────────────────────────────────────────
-function DeclarationCard({ declaration }) {
+function DeclarationCard({ declaration, profile }) {
   const [copied, setCopied] = useState(false);
+  const signatureUrl = profile?.signature_file_url || null;
 
   const copyText = () => {
     navigator.clipboard.writeText(declaration.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // Strip the trailing "Semnatura: ___" line — we render it visually below instead.
+  const lines = (declaration.content || '').split('\n');
+  const sigIdx = lines.findIndex(l => l.trim().toLowerCase().startsWith('semnatura') || l.trim().toLowerCase().startsWith('semnătura'));
+  const bodyText = sigIdx >= 0 ? lines.slice(0, sigIdx).join('\n').trimEnd() : declaration.content;
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)' }}>
@@ -296,7 +303,7 @@ function DeclarationCard({ declaration }) {
           <span className="text-sm font-semibold text-white">{declaration.title}</span>
         </div>
         <div className="flex gap-2">
-          <button onClick={copyText} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-white/5 transition-all">
+          <button onClick={copyText} aria-label="Copiaza textul declaratiei" className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-white/5 transition-all">
             <Copy className="w-3 h-3" />
             {copied ? 'Copiat!' : 'Copiaza'}
           </button>
@@ -304,7 +311,27 @@ function DeclarationCard({ declaration }) {
       </div>
       <div className="p-4">
         <div className="rounded-xl p-4 font-mono text-xs text-slate-300 leading-relaxed whitespace-pre-wrap" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.04)' }}>
-          {declaration.content}
+          {bodyText}
+
+          {/* Signature row */}
+          {signatureUrl ? (
+            <div className="mt-4 flex items-center gap-3 flex-wrap font-sans">
+              <span className="text-xs text-slate-300 font-semibold">Semnătură din Seif:</span>
+              <div className="bg-white rounded-lg px-4 py-2">
+                <img
+                  src={signatureUrl}
+                  alt="Semnătură salvată"
+                  className="h-12 max-w-[180px] object-contain"
+                />
+              </div>
+              <span className="text-[10px] text-success">Conectată la Seif</span>
+            </div>
+          ) : (
+            <div className="mt-4 font-sans">
+              <span className="text-xs text-slate-300 font-semibold">Semnătura: </span>
+              <span className="text-slate-500">_______________________</span>
+            </div>
+          )}
         </div>
         <p className="text-[10px] text-slate-600 mt-2 italic">{declaration.legalNote}</p>
       </div>
@@ -605,7 +632,8 @@ export default function PassportDemo() {
                 <div className="flex items-center gap-2 mb-2 px-1">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-accent">Declaratie Generata Automat</span>
                 </div>
-                <DeclarationCard declaration={packet.declaration} />
+                <DeclarationCard declaration={packet.declaration} profile={profile} />
+                <DeclarationDownloadCard profile={profile} />
               </div>
 
               {/* Required Documents Checklist */}
