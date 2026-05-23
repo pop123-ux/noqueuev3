@@ -1,0 +1,85 @@
+{
+  "name": "Institution",
+  "type": "object",
+  "title": "Institution",
+  "description": "Seeded directory of Romanian public-service offices (immigration, health, civil registry, etc.).",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "Stable identifier (e.g. igi-cluj)."
+    },
+    "name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "immigration",
+        "health",
+        "civil_registry",
+        "tax",
+        "police",
+        "city_hall",
+        "labor",
+        "education",
+        "bank",
+        "embassy",
+        "notary",
+        "other"
+      ],
+      "default": "other"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string",
+      "default": "Cluj-Napoca"
+    },
+    "county": {
+      "type": "string",
+      "default": "Cluj"
+    },
+    "lat": {
+      "type": "number"
+    },
+    "lng": {
+      "type": "number"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    },
+    "languages_supported": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "RO"
+      ]
+    },
+    "supports_appointment": {
+      "type": "boolean",
+      "default": false
+    },
+    "online_service": {
+      "type": "boolean",
+      "default": false
+    },
+    "notes": {
+      "type": "string"
+    },
+    "is_sample": {
+      "type": "boolean",
+      "default": false,
+      "description": "Flagged true for seeded demo data."
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ]
+}

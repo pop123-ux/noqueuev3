@@ -1,0 +1,71 @@
+{
+  "name": "LegalUpdate",
+  "type": "object",
+  "title": "Legal Update",
+  "description": "Immigration / civic law updates surfaced to relocating users.",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "details": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "immigration",
+        "tax",
+        "health",
+        "labor",
+        "education",
+        "civic"
+      ],
+      "default": "immigration"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "info",
+        "important",
+        "critical"
+      ],
+      "default": "info"
+    },
+    "applies_to": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "eu",
+          "non_eu",
+          "all"
+        ]
+      },
+      "default": [
+        "all"
+      ]
+    },
+    "source_url": {
+      "type": "string"
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date"
+    },
+    "is_sample": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "title",
+    "summary"
+  ]
+}

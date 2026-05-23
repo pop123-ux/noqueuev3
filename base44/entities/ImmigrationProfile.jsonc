@@ -1,0 +1,106 @@
+{
+  "name": "ImmigrationProfile",
+  "type": "object",
+  "title": "Immigration Profile",
+  "description": "Per-user profile capturing relocation context for the MoveToRomania module.",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Owning user (email). One ImmigrationProfile per user."
+    },
+    "is_eu": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if the user is an EU/EEA/Swiss citizen."
+    },
+    "country": {
+      "type": "string",
+      "description": "Country of origin (ISO name or code)."
+    },
+    "purpose": {
+      "type": "string",
+      "enum": [
+        "work",
+        "study",
+        "family",
+        "business",
+        "research",
+        "retirement",
+        "other"
+      ],
+      "default": "work",
+      "description": "Primary reason for moving to Romania."
+    },
+    "city": {
+      "type": "string",
+      "default": "Cluj-Napoca",
+      "description": "Destination city in Romania."
+    },
+    "housing": {
+      "type": "string",
+      "enum": [
+        "rented",
+        "owned",
+        "company_provided",
+        "with_family",
+        "hotel",
+        "not_yet"
+      ],
+      "default": "not_yet"
+    },
+    "has_contract": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if the user already has a work / study / lease contract."
+    },
+    "needs_healthcare_registration": {
+      "type": "boolean",
+      "default": true
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "EN",
+        "RO",
+        "FR",
+        "DE",
+        "ES",
+        "IT",
+        "UK",
+        "AR",
+        "TR"
+      ],
+      "default": "EN"
+    },
+    "arrival_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Planned or actual arrival date in Romania."
+    },
+    "family_size": {
+      "type": "integer",
+      "default": 1,
+      "minimum": 1,
+      "description": "Number of people relocating together (including the user)."
+    },
+    "integration_score": {
+      "type": "number",
+      "default": 0,
+      "description": "0-100, computed from profile + completed tasks."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "completed"
+      ],
+      "default": "draft"
+    }
+  },
+  "required": [
+    "user_id",
+    "country",
+    "purpose"
+  ]
+}
