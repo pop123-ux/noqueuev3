@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Zap, Briefcase, Bell, User } from 'lucide-react';
+import { Menu, X, Zap, Briefcase, Bell, User, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navLinks = [
@@ -44,9 +44,13 @@ export default function Navbar() {
               <Bell className="w-3.5 h-3.5" />
               Alerts
             </Link>
+            <Link to="/vault" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5" />
+              Seif
+            </Link>
             <Link to="/profile" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
               <User className="w-3.5 h-3.5" />
-              Profile
+              Cont
             </Link>
             <Link to="/start">
               <Button size="sm" className="ml-3 bg-primary hover:bg-primary/90 text-white rounded-xl">

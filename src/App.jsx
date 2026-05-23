@@ -9,7 +9,9 @@ import Home from './pages/Home';
 import CaseStart from './pages/CaseStart';
 import Cases from './pages/Cases';
 import AppointmentWatchPage from './pages/AppointmentWatch';
-import Profile from './pages/Profile';
+import Profile from './pages/Profile.jsx';
+import Onboarding from './pages/Onboarding';
+import IdentityVault from './pages/IdentityVault';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -43,6 +45,8 @@ const AuthenticatedApp = () => {
       <Route path="/cases" element={<Cases />} />
       <Route path="/appointments/watch" element={<AppointmentWatchPage />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/vault" element={<IdentityVault />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
