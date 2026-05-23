@@ -29,7 +29,35 @@
         "create",
         "update"
       ]
+    },
+    {
+      "function_name": "saveImmigrationProfile",
+      "description": "Create or update the user's ImmigrationProfile (country, purpose, city, housing, contract, etc.)."
+    },
+    {
+      "function_name": "generateIntegrationChecklist",
+      "description": "Generate a personalized list of relocation tasks based on the user's ImmigrationProfile."
+    },
+    {
+      "function_name": "findNearbyInstitutions",
+      "description": "Look up Romanian public-service offices (IGI, CAS, ANAF, civil registry, etc.) by city and type."
     }
   ],
+  "context_files": [],
+  "app_user_connector_configs": [],
+  "selected_skill_names": [],
+  "selected_workspace_skill_ids": [],
+  "model": "automatic",
+  "whatsapp_greeting": null,
+  "telegram_greeting": null,
+  "line_greeting": null,
+  "memory_config": {
+    "enabled": true,
+    "scope": "both",
+    "instructions": null
+  },
+  "voice_config": {
+    "voice_id": null
+  },
   "name": "immigration_assistant"
 }

@@ -296,16 +296,16 @@ export async function exportStructuredPassportPdf(profile, options = {}) {
   // Previous passport number boxes (8 chars)
   drawCharBoxes(page, data.prevPassportBoxes, halfBound + 22, possRowY + 8, data.hasPreviousPassport ? 'filled' : 'normal', bold, 7);
 
-  // "eliberat la data de"
+  // "eliberat la data de" — intentionally left blank for manual completion at the counter.
+  // Do NOT autofill issue date here, even if previous_passport_date exists in Safe Profile.
   page.drawText('eliberat la data de', { x: formX + 4, y: possRowY + 2, size: 7, font: regular, color: BLACK });
-  // prev passport date boxes
-  const prevDayBoxes = (data.prevPassportDate.day || ['', '']).slice(0, 2);
-  const prevMonBoxes = (data.prevPassportDate.month || ['', '']).slice(0, 2);
-  const prevYrBoxes = (data.prevPassportDate.year || ['', '', '', '']).slice(0, 4);
+  const blankDay = ['', ''];
+  const blankMon = ['', ''];
+  const blankYr = ['', '', '', ''];
   const prevDateX = formX + 80;
-  drawCharBoxes(page, prevDayBoxes, prevDateX, possRowY - 8, 'normal', bold, 7);
-  drawCharBoxes(page, prevMonBoxes, prevDateX + 2 * (BOX_SIZE + BOX_GAP) + 3, possRowY - 8, 'normal', bold, 7);
-  drawCharBoxes(page, prevYrBoxes, prevDateX + 4 * (BOX_SIZE + BOX_GAP) + 6, possRowY - 8, 'normal', bold, 7);
+  drawCharBoxes(page, blankDay, prevDateX, possRowY - 8, 'normal', bold, 7);
+  drawCharBoxes(page, blankMon, prevDateX + 2 * (BOX_SIZE + BOX_GAP) + 3, possRowY - 8, 'normal', bold, 7);
+  drawCharBoxes(page, blankYr, prevDateX + 4 * (BOX_SIZE + BOX_GAP) + 6, possRowY - 8, 'normal', bold, 7);
 
   curY = possRowY - 14;
 
@@ -344,11 +344,11 @@ export async function exportStructuredPassportPdf(profile, options = {}) {
   page.drawText('eliberat la', { x: seriaX + 160, y: legRowY + 42, size: 8, font: regular, color: BLACK });
 
   page.drawText('data de', { x: seriaX, y: legRowY + 20, size: 8, font: regular, color: BLACK });
-  // ID issue date boxes
-  const ciDate = parseDateBoxes(profile?.id_issue_date || '');
-  drawCharBoxes(page, (ciDate.day || ['','']).slice(0,2), seriaX + 42, legRowY + 14, 'normal', bold, 7);
-  drawCharBoxes(page, (ciDate.month || ['','']).slice(0,2), seriaX + 42 + 2*(BOX_SIZE+BOX_GAP)+3, legRowY + 14, 'normal', bold, 7);
-  drawCharBoxes(page, (ciDate.year || ['','','','']).slice(0,4), seriaX + 42 + 4*(BOX_SIZE+BOX_GAP)+6, legRowY + 14, 'normal', bold, 7);
+  // ID issue date — intentionally left blank. This area is filled in by hand at submission;
+  // never autofill from profile.id_issue_date or any Safe Profile value.
+  drawCharBoxes(page, ['', ''], seriaX + 42, legRowY + 14, 'normal', bold, 7);
+  drawCharBoxes(page, ['', ''], seriaX + 42 + 2*(BOX_SIZE+BOX_GAP)+3, legRowY + 14, 'normal', bold, 7);
+  drawCharBoxes(page, ['', '', '', ''], seriaX + 42 + 4*(BOX_SIZE+BOX_GAP)+6, legRowY + 14, 'normal', bold, 7);
 
   curY = legRowY - 4;
 
