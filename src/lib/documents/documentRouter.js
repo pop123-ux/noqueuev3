@@ -1,37 +1,40 @@
 /**
- * Document Router — Hidden LLM-backed document selection
- * Deterministic first, LLM for disambiguation only.
- * Never shows raw LLM output to users.
+ * Document Router
+ * Maps user intent to document templates deterministically, with LLM fallback.
  */
 import { base44 } from '@/api/base44Client';
 import { templateRegistry, procedureDocumentMap } from './templateRegistry';
 import { getMissingFields } from './profileFieldMap';
-import { retrieveDocuments } from '@/lib/data/civicDocuments';
 
-/**
- * Deterministic procedure → document mapping.
- * Returns list of template IDs for a given procedure key.
- */
-function deterministicDocIds(procedureKey, userQuery) {
-  // Direct mapping
-  const direct = procedureDocumentMap[procedureKey];
-  if (direct && direct.length > 0) return direct;
+// Keyword → procedure key mapping (deterministic, fastest path)
+const INTENT_MAP = [
+  { keys: ['lost id', 'pierdut ci', 'stolen id', 'furat ci', 'lost card'],             proc: 'lost-id' },
+  { keys: ['renew id', 'reinnoire ci', 'new id', 'ci nou', 'act de identitate'],        proc: 'id-renewal' },
+  { keys: ['address change', 'schimbare adresa', 'domiciliu', 'moved', 'new address'],  proc: 'domicile-change' },
+  { keys: ['passport history', 'istoric pasaport', 'passport records', 'evidenta pasapoarte'], proc: 'passport-history' },
+  { keys: ['rneps', 'date rneps', 'national passport registry'],                         proc: 'rneps' },
+  { keys: ['urgent passport', 'pasaport urgent', 'emergency passport'],                  proc: 'passport-urgent' },
+  { keys: ['passport', 'pasaport'],                                                       proc: 'passport' },
+  { keys: ['declaratie', 'declaration', 'self declaration', 'proprie raspundere'],       proc: 'declaration' },
+  { keys: ['notary', 'notariat', 'notarial'],                                            proc: 'notary' },
+  { keys: ['driving license', 'permis conducere', 'driver license', 'driving licence'], proc: 'driver-license' },
+  { keys: ['anaf', 'fiscal certificate', 'certificat fiscal', 'tax certificate'],        proc: 'anaf-tax' },
+  { keys: ['company', 'srl', 'register company', 'inregistrare firma', 'business reg'], proc: 'business-registration' },
+  { keys: ['divorce', 'divort', 'divortul'],                                             proc: 'divorce' },
+  { keys: ['cazier', 'criminal record', 'antecedente penale'],                           proc: 'criminal-record' },
+  { keys: ['health insurance', 'asigurare sanatate', 'cjas', 'cnas'],                   proc: 'health-insurance' },
+  { keys: ['cerere', 'request', 'petition', 'generic request'],                          proc: 'generic-request' },
+];
 
-  // Fuzzy key match
-  const lower = (procedureKey || '').toLowerCase();
-  for (const [key, ids] of Object.entries(procedureDocumentMap)) {
-    if (lower.includes(key) || key.includes(lower)) return ids;
+function detectProcedureKey(userRequest) {
+  const lower = (userRequest || '').toLowerCase();
+  for (const entry of INTENT_MAP) {
+    if (entry.keys.some(k => lower.includes(k))) return entry.proc;
   }
-
-  // Fall back to civicDocuments retrieval
-  const retrieved = retrieveDocuments(userQuery || procedureKey || '');
-  return retrieved.map(d => d.id).filter(id => templateRegistry[id]);
+  return null;
 }
 
-/**
- * Build a document result item from template + profile.
- */
-function buildDocumentResult(template, profile, llmHints = {}) {
+function buildDocumentResult(template, profile) {
   const missingFields = getMissingFields(profile, template.requiredProfileFields || []);
   const missingAssets = (template.requiredAssets || []).filter(asset => {
     if (asset === 'signature' && !profile?.signature_file_url) return true;
@@ -39,17 +42,14 @@ function buildDocumentResult(template, profile, llmHints = {}) {
     return false;
   });
 
-  const hasAllRequired = missingFields.length === 0;
   const isOfficeOnly = template.sourceType === 'physical_office_only';
-
   let status = 'ready';
   if (missingFields.length > 0) status = 'missing_profile_data';
   else if (template.needsManualReview) status = 'needs_review';
 
   const labels = [];
   if (template.fillMethod === 'support-sheet') {
-    if (isOfficeOnly) labels.push('Office-only form');
-    else labels.push('NoQueue prep sheet');
+    labels.push(isOfficeOnly ? 'Office-only form' : 'NoQueue prep sheet');
   } else {
     labels.push('Ready to print');
   }
@@ -64,9 +64,9 @@ function buildDocumentResult(template, profile, llmHints = {}) {
     document_id: template.id,
     title: template.title,
     titleRo: template.titleRo,
-    generate_now: hasAllRequired && !isOfficeOnly,
+    generate_now: missingFields.length === 0 && !isOfficeOnly,
     fill_method: template.fillMethod,
-    official_submittable: template.isOfficialSubmittable && hasAllRequired,
+    official_submittable: template.isOfficialSubmittable && missingFields.length === 0,
     requires_profile_fields: template.requiredProfileFields || [],
     missing_profile_fields: missingFields,
     requires_assets: template.requiredAssets || [],
@@ -78,64 +78,62 @@ function buildDocumentResult(template, profile, llmHints = {}) {
     online_url: template.onlineUrl || null,
     special_instruction_labels: labels,
     reason_short: template.instructionsShort || '',
-    cloud_filename: `NoQueue_${template.id}_${new Date().toISOString().slice(0, 10)}.pdf`,
     source_url: template.sourceUrl,
     source_type: template.sourceType,
     institution: template.institution,
     required_attachments: template.requiredAttachments || [],
-    needs_notary_flag: template.needsNotary || false,
     template,
     status,
   };
 }
 
 /**
- * Route a user request to documents.
- * Returns structured result — no prose for users.
+ * Route a user request to document templates.
+ * Returns structured result — never raw prose.
  */
 export async function routeDocuments(userRequest, procedureKey, profile) {
-  // Step 1: Deterministic lookup
-  let docIds = deterministicDocIds(procedureKey, userRequest);
+  // 1. Detect procedure key from user intent if not provided
+  const detectedKey = procedureKey || detectProcedureKey(userRequest);
 
-  // Step 2: LLM disambiguation if needed
-  if (docIds.length === 0 || !procedureKey) {
-    const registryList = Object.values(templateRegistry).map(t =>
-      `${t.id}: ${t.title} | category: ${t.category} | institution: ${t.institution}`
-    ).join('\n');
+  // 2. Get document IDs from procedure map
+  let docIds = detectedKey ? (procedureDocumentMap[detectedKey] || []) : [];
+
+  // 3. LLM fallback if still no match
+  if (docIds.length === 0) {
+    const registryList = Object.values(templateRegistry)
+      .map(t => `${t.id}: ${t.title} | category: ${t.category}`)
+      .join('\n');
 
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a hidden document router for Romanian civic procedures in Cluj-Napoca.
+      prompt: `You are a Romanian civic document router. Map this user request to document template IDs.
 User request: "${userRequest}"
-Detected procedure: "${procedureKey || 'unknown'}"
 
-Available document templates:
+Available templates:
 ${registryList}
 
-Select only document IDs that apply to this user's need.
-Do NOT invent document IDs. Do NOT include documents not in the list.
-Output strict JSON only.`,
+Return only IDs from the list above that match the user's need. Output strict JSON.`,
       response_json_schema: {
         type: "object",
         properties: {
+          procedure_key: { type: "string" },
           procedure_title: { type: "string" },
           document_ids: { type: "array", items: { type: "string" } },
-          reason: { type: "string" }
         }
       }
     });
 
     docIds = (result.document_ids || []).filter(id => templateRegistry[id]);
+    if (!procedureKey && result.procedure_key) {
+      procedureKey = result.procedure_key;
+    }
   }
 
-  // Step 3: Build results
-  const documents = docIds.map(id => {
-    const template = templateRegistry[id];
-    if (!template) return null;
-    return buildDocumentResult(template, profile);
-  }).filter(Boolean);
+  const documents = docIds
+    .map(id => templateRegistry[id] ? buildDocumentResult(templateRegistry[id], profile) : null)
+    .filter(Boolean);
 
   return {
-    procedure_key: procedureKey,
+    procedure_key: detectedKey || procedureKey || 'unknown',
     documents,
     total: documents.length,
     ready_count: documents.filter(d => d.status === 'ready').length,

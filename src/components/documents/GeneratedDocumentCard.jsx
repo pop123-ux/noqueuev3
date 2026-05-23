@@ -22,7 +22,7 @@ const LABEL_ICONS = {
   'Can do online':         '🌐',
 };
 
-export default function GeneratedDocumentCard({ doc, currentProfile, onRegenerate }) {
+export default function GeneratedDocumentCard({ doc, currentProfile, onRegenerate, showProcedure = false }) {
   const [uploading, setUploading] = useState(false);
   const [driveResult, setDriveResult] = useState(null);
   const [error, setError] = useState(null);
@@ -103,6 +103,12 @@ export default function GeneratedDocumentCard({ doc, currentProfile, onRegenerat
               <div className="flex-1 min-w-0">
                 <h4 className="text-sm font-semibold text-white leading-snug">{doc.document_title}</h4>
                 <p className="text-[10px] text-slate-500 mt-0.5">{doc.source_label}</p>
+                {showProcedure && doc.procedure_key && (
+                  <p className="text-[10px] text-slate-600 mt-0.5">
+                    Procedure: {doc.procedure_key.replace(/-/g, ' ')} ·{' '}
+                    {new Date(doc.created_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </p>
+                )}
               </div>
               <DocumentStatusBadge status={doc.status} stale={isStale} />
             </div>
