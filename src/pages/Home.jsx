@@ -13,6 +13,7 @@ import QueueIntelligence from '@/components/noqueue/QueueIntelligence';
 import SmartRecommendations from '@/components/noqueue/SmartRecommendations';
 
 import DigitalRomaniaFit from '@/components/noqueue/DigitalRomaniaFit';
+import MoveToRomaniaDashboardCard from '@/components/moveToRomania/MoveToRomaniaDashboardCard';
 import Footer from '@/components/noqueue/Footer';
 
 export default function Home() {
@@ -67,6 +68,10 @@ export default function Home() {
       />
 
       <QueueIntelligence />
+
+      {/* Move to Romania module — dashboard card */}
+      <MoveToRomaniaDashboardCard />
+
       <SmartRecommendations />
       <DigitalRomaniaFit />
       <Footer />

@@ -16,6 +16,7 @@ import Onboarding from './pages/Onboarding';
 import IdentityVault from './pages/IdentityVault';
 import DigitalVault from './pages/DigitalVault';
 import PassportDemo from './pages/PassportDemo';
+import MoveToRomania from './pages/MoveToRomania';
 import OnboardingGate from './components/auth/OnboardingGate';
 // Add page imports here
 
@@ -78,6 +79,7 @@ const AuthenticatedApp = () => {
       <Route path="/vault" element={<IdentityVault />} />
       <Route path="/digital-vault" element={<DigitalVault />} />
       <Route path="/demo/passport" element={<PassportDemo />} />
+      <Route path="/move-to-romania" element={<MoveToRomania />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
