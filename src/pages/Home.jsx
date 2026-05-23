@@ -58,8 +58,6 @@ export default function Home() {
         <DocumentChecklist workflow={selectedWorkflow} />
       </div>
 
-      <WorkflowCards onSelectWorkflow={handleSelectWorkflow} />
-
       <InstitutionFinder onSelectInstitution={handleSelectInstitution} />
 
       {/* Premium Cluj Map */}

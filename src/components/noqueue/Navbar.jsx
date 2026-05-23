@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Zap, Briefcase, Bell, User, Shield, FolderOpen } from 'lucide-react';
+import { Menu, X, Zap, Briefcase, User, Shield, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navLinks = [
@@ -37,10 +37,6 @@ export default function Navbar() {
             <Link to="/cases" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
               <Briefcase className="w-3.5 h-3.5" />
               My Cases
-            </Link>
-            <Link to="/appointments/watch" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
-              <Bell className="w-3.5 h-3.5" />
-              Alerts
             </Link>
             <Link to="/vault" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5" />
@@ -81,9 +77,6 @@ export default function Navbar() {
           ))}
           <Link to="/cases" onClick={() => setOpen(false)} className="block py-3 text-sm text-slate-300 hover:text-white border-b border-white/5">
             My Cases
-          </Link>
-          <Link to="/appointments/watch" onClick={() => setOpen(false)} className="block py-3 text-sm text-slate-300 hover:text-white border-b border-white/5">
-            Appointment Alerts
           </Link>
           <Link to="/digital-vault" onClick={() => setOpen(false)} className="block py-3 text-sm text-slate-300 hover:text-white border-b border-white/5">
             🗂️ Digital Vault
