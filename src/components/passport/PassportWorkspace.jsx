@@ -2,12 +2,12 @@
  * PassportWorkspace — Full passport application workspace
  * Autofill from Seif, review fields, generate & export PDF draft
  */
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, CheckCircle2, AlertTriangle, FileText, Download,
   Edit3, Globe, Clock, MapPin, Shield, ChevronDown,
-  ChevronUp, ExternalLink, Loader2, Info
+  ChevronUp, ExternalLink, Loader2, Info, Upload, X, PenLine
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { passportProcedure, matchPassportProfile } from '@/lib/rag/passportProcedure';
@@ -126,8 +126,17 @@ export default function PassportWorkspace({ profile, caseData }) {
   const [exporting, setExporting] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState(null);
+  // Local signature override: { previewUrl, fileUrl } — fileUrl is the uploaded storage URL
+  const [localSignature, setLocalSignature] = useState(null);
+  const [uploadingSignature, setUploadingSignature] = useState(false);
+  const sigInputRef = useRef(null);
 
   const activeProfile = editedProfile || profile;
+  // Merge local signature into the profile sent to PDF exporter
+  const exportProfile = localSignature?.fileUrl
+    ? { ...activeProfile, signature_file_url: localSignature.fileUrl }
+    : activeProfile;
+
   const { filled, missing, readiness } = matchPassportProfile(activeProfile);
   const formData = mapProfileToPassportForm(activeProfile, { isUrgent: true });
 
@@ -137,9 +146,27 @@ export default function PassportWorkspace({ profile, caseData }) {
     setEditedProfile(prev => ({ ...(prev || profile || {}), [profileKey]: value }));
   };
 
+  const handleSignatureUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingSignature(true);
+    // Show local preview immediately
+    const previewUrl = URL.createObjectURL(file);
+    setLocalSignature({ previewUrl, fileUrl: null });
+    try {
+      const { base44 } = await import('@/api/base44Client');
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setLocalSignature({ previewUrl, fileUrl: file_url });
+    } catch (err) {
+      console.warn('Signature upload failed:', err);
+      // Keep preview but no fileUrl — PDF will warn
+    }
+    setUploadingSignature(false);
+  };
+
   const handleExport = async () => {
     setExporting(true);
-    const pdfBytes = await exportStructuredPassportPdf(activeProfile, { isUrgent: true });
+    const pdfBytes = await exportStructuredPassportPdf(exportProfile, { isUrgent: true });
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -149,6 +176,9 @@ export default function PassportWorkspace({ profile, caseData }) {
     URL.revokeObjectURL(url);
     setExporting(false);
   };
+
+  // Signature to show in badges / preview — prefer local override
+  const effectiveSignatureUrl = localSignature?.previewUrl || activeProfile?.signature_file_url;
 
   const readinessColor = readiness >= 80 ? '#22c55e' : readiness >= 50 ? '#facc15' : '#ef4444';
 
@@ -180,7 +210,7 @@ export default function PassportWorkspace({ profile, caseData }) {
             { label: '📅 Data depunerii', filled: true },
             { label: '📏 Înălțime', filled: !!activeProfile?.height_cm },
             { label: '👁 Culoarea ochilor', filled: !!activeProfile?.eye_color },
-            { label: '✍️ Semnătură', filled: !!activeProfile?.signature_file_url },
+            { label: '✍️ Semnătură', filled: !!effectiveSignatureUrl },
           ].map(({ label, filled }) => (
             <span key={label} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${
               filled
@@ -272,9 +302,85 @@ export default function PassportWorkspace({ profile, caseData }) {
             height_cm: activeProfile?.height_cm ?? '',
             eye_color: activeProfile?.eye_color || '',
           }} onChange={handleFieldChange} />
+
+          {/* ── Signature Upload ── */}
+          <div className="mt-5 pt-4 border-t border-white/8">
+            <label className="text-[10px] font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5 text-slate-400">
+              <PenLine className="w-3 h-3 text-accent" />
+              Semnătură (câmpul din formular)
+              {effectiveSignatureUrl && <CheckCircle2 className="w-3 h-3 text-green-400" />}
+              {!effectiveSignatureUrl && <span className="text-[9px] text-warning font-normal normal-case">— lipsa din Seif</span>}
+            </label>
+
+            <div className="flex items-start gap-3">
+              {/* Preview box */}
+              <div
+                className="flex-1 flex items-center justify-center rounded-xl overflow-hidden"
+                style={{
+                  minHeight: 64,
+                  background: 'rgba(255,255,255,0.03)',
+                  border: effectiveSignatureUrl ? '1px solid rgba(34,197,94,0.3)' : '1px dashed rgba(255,255,255,0.12)',
+                }}
+              >
+                {effectiveSignatureUrl ? (
+                  <img
+                    src={effectiveSignatureUrl}
+                    alt="Semnatura"
+                    className="max-h-16 max-w-full object-contain p-2"
+                    style={{ filter: 'contrast(1.3) brightness(0.9)' }}
+                  />
+                ) : (
+                  <span className="text-xs text-slate-600 italic">Nicio semnătură</span>
+                )}
+              </div>
+
+              {/* Controls */}
+              <div className="flex flex-col gap-2 shrink-0">
+                <input
+                  ref={sigInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg"
+                  className="hidden"
+                  onChange={handleSignatureUpload}
+                />
+                <button
+                  onClick={() => sigInputRef.current?.click()}
+                  disabled={uploadingSignature}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+                  style={{ background: 'rgba(6,182,212,0.12)', border: '1px solid rgba(6,182,212,0.25)', color: '#22d3ee' }}
+                >
+                  {uploadingSignature
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <Upload className="w-3.5 h-3.5" />}
+                  {uploadingSignature ? 'Se incarca...' : 'Incarca'}
+                </button>
+                {localSignature && (
+                  <button
+                    onClick={() => setLocalSignature(null)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-white transition-all"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                  >
+                    <X className="w-3.5 h-3.5" /> Sterge
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {localSignature && !localSignature.fileUrl && !uploadingSignature && (
+              <p className="text-[10px] text-warning mt-1.5 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" /> Upload in curs sau esuat — incearca din nou
+              </p>
+            )}
+            {localSignature?.fileUrl && (
+              <p className="text-[10px] text-green-400 mt-1.5 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Semnatura incarcata — va aparea in PDF
+              </p>
+            )}
+          </div>
+
           <Button
             onClick={handleExport}
-            disabled={exporting}
+            disabled={exporting || uploadingSignature}
             className="w-full mt-4 h-10 rounded-xl text-sm font-semibold"
             style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)' }}
           >
