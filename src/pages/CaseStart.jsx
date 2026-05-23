@@ -213,33 +213,57 @@ export default function CaseStart() {
     setError(null);
     setSavedCaseId(null);
     setInput(q);
-    const res = await classifyIntake(q);
-    setResult(res);
-    setLoading(false);
+    try {
+      const res = await classifyIntake(q);
+      setResult(res);
+    } catch (err) {
+      console.error('[CaseStart] classify failed:', err);
+      setError('classify');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const saveCase = async () => {
-    if (!result) return;
+    if (!result) return null;
+    if (saving) return null; // guard against double-clicks
     setSaving(true);
-    const newCase = await base44.entities.Case.create({
-      procedure_key: result.procedure_key || '',
-      procedure_title: result.procedure_title || input,
-      institution_key: result.institution_key || '',
-      institution_name: result.institution_name || '',
-      channel: result.channel || 'walk-in',
-      status: 'open',
-      urgency: result.urgency || 'normal',
-      user_description: input,
-      required_documents: result.required_documents || [],
-      completed_documents: [],
-      next_action: result.next_action || '',
-      can_do_online: result.can_do_online || false,
-      online_url: result.online_url || '',
-      confidence: result.confidence || 0,
-    });
-    setSavedCaseId(newCase.id);
-    setSaving(false);
-    return newCase;
+    setError(null);
+    try {
+      // Attach user_id so /cases can scope by owner. Falls back to a stable
+      // demo id when no auth is available — keeps hackathon flows working.
+      let userId = 'anonymous_demo_user';
+      try {
+        const u = await base44.auth.me();
+        if (u?.email) userId = u.email;
+      } catch {}
+
+      const newCase = await base44.entities.Case.create({
+        user_id: userId,
+        procedure_key: result.procedure_key || '',
+        procedure_title: result.procedure_title || input,
+        institution_key: result.institution_key || '',
+        institution_name: result.institution_name || '',
+        channel: result.channel || 'walk-in',
+        status: 'open',
+        urgency: result.urgency || 'normal',
+        user_description: input,
+        required_documents: result.required_documents || [],
+        completed_documents: [],
+        next_action: result.next_action || '',
+        can_do_online: result.can_do_online || false,
+        online_url: result.online_url || '',
+        confidence: result.confidence || 0,
+      });
+      setSavedCaseId(newCase.id);
+      return newCase;
+    } catch (err) {
+      console.error('[CaseStart] saveCase failed:', err);
+      setError('save');
+      return null;
+    } finally {
+      setSaving(false);
+    }
   };
 
   const isPassportCase = (text) => {
@@ -248,6 +272,7 @@ export default function CaseStart() {
   };
 
   const handleGenerateDocs = async () => {
+    if (generatingDocs) return; // guard against double-clicks
     // Passport gets its own dedicated workspace
     if (isPassportCase(input) || isPassportCase(result?.procedure_key) || isPassportCase(result?.procedure_title)) {
       setShowPassportWorkspace(true);
@@ -255,21 +280,28 @@ export default function CaseStart() {
     }
     setGeneratingDocs(true);
     setGeneratedDocs([]);
-    let caseId = savedCaseId;
-    if (!caseId) {
-      const cas = await saveCase();
-      caseId = cas?.id;
+    setError(null);
+    try {
+      let caseId = savedCaseId;
+      if (!caseId) {
+        const cas = await saveCase();
+        caseId = cas?.id;
+      }
+      const routerResult = await routeDocuments(input, result?.procedure_key, profile);
+      if (routerResult.documents.length > 0) {
+        const docs = await generateDocumentsForCase({
+          routerResult,
+          profile,
+          caseId,
+        });
+        setGeneratedDocs(docs);
+      }
+    } catch (err) {
+      console.error('[CaseStart] handleGenerateDocs failed:', err);
+      setError('generate');
+    } finally {
+      setGeneratingDocs(false);
     }
-    const routerResult = await routeDocuments(input, result?.procedure_key, profile);
-    if (routerResult.documents.length > 0) {
-      const docs = await generateDocumentsForCase({
-        routerResult,
-        profile,
-        caseId,
-      });
-      setGeneratedDocs(docs);
-    }
-    setGeneratingDocs(false);
   };
 
   return (
@@ -372,10 +404,27 @@ export default function CaseStart() {
           )}
         </AnimatePresence>
 
-        {/* Error */}
-        {error && (
-          <div className="rounded-2xl bg-destructive/10 border border-destructive/30 p-4 text-sm text-destructive">
-            {error}
+        {/* Friendly error cards */}
+        {error === 'classify' && (
+          <div role="alert" aria-live="polite" className="rounded-2xl bg-destructive/10 border border-destructive/30 p-4 mb-4">
+            <p className="text-sm text-white font-medium mb-1">We could not classify this request.</p>
+            <p className="text-xs text-slate-400 mb-3">Try one of the quick starts or rephrase the request.</p>
+            <button
+              onClick={() => classify('I lost my ID')}
+              className="text-xs px-3 py-1.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
+            >
+              Use demo: I lost my ID
+            </button>
+          </div>
+        )}
+        {error === 'save' && (
+          <div role="alert" aria-live="polite" className="rounded-2xl bg-destructive/10 border border-destructive/30 p-4 mb-4 text-sm text-white">
+            We couldn't save this case. Please try again in a moment.
+          </div>
+        )}
+        {error === 'generate' && (
+          <div role="alert" aria-live="polite" className="rounded-2xl bg-warning/10 border border-warning/30 p-4 mb-4 text-sm text-white">
+            Document generation failed, but your case is saved. You can still use the checklist.
           </div>
         )}
 
@@ -406,17 +455,29 @@ export default function CaseStart() {
               </div>
 
               {generatedDocs.length === 0 && (
-                <Button
-                  onClick={handleGenerateDocs}
-                  disabled={generatingDocs}
-                  className="w-full bg-accent/20 hover:bg-accent/30 text-accent border border-accent/30 rounded-xl h-11"
-                >
-                  {generatingDocs ? (
-                    <><Loader2 className="w-4 h-4 animate-spin mr-2" />Generating documents…</>
-                  ) : (
-                    <><FileOutput className="w-4 h-4 mr-2" />Generate Documents for this Case</>
-                  )}
-                </Button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Button
+                    onClick={handleGenerateDocs}
+                    disabled={generatingDocs}
+                    aria-busy={generatingDocs}
+                    aria-label="Generate preparation documents for this case"
+                    className="bg-accent/20 hover:bg-accent/30 text-accent border border-accent/30 rounded-xl h-11"
+                  >
+                    {generatingDocs ? (
+                      <><Loader2 className="w-4 h-4 animate-spin mr-2" />Generating…</>
+                    ) : (
+                      <><FileOutput className="w-4 h-4 mr-2" />Generate preparation documents</>
+                    )}
+                  </Button>
+                  <Link to="/cases" aria-label="Open My Cases">
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-xl h-11 border-white/10 bg-white/[0.03] hover:bg-white/[0.06] text-white"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />Open My Cases
+                    </Button>
+                  </Link>
+                </div>
               )}
             </motion.div>
           )}
@@ -426,14 +487,19 @@ export default function CaseStart() {
         <AnimatePresence>
           {generatedDocs.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-6 space-y-3">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-accent" />
-                  {generatedDocs.length} Document{generatedDocs.length !== 1 ? 's' : ''} Generated
-                </h3>
-                <Link to="/cases" className="text-xs text-primary hover:text-primary/80">
-                  View in My Cases →
-                </Link>
+              <div className="mb-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-accent" />
+                    Preparation documents generated ({generatedDocs.length})
+                  </h3>
+                  <Link to="/cases" className="text-xs text-primary hover:text-primary/80">
+                    View in My Cases →
+                  </Link>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  NoQueue does not create fake official forms. These PDFs are preparation sheets/checklists unless an official downloadable template is available.
+                </p>
               </div>
               {generatedDocs.map(doc => (
                 <GeneratedDocumentCard key={doc.id} doc={doc} currentProfile={profile} />

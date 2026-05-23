@@ -2,6 +2,10 @@
   "name": "Case",
   "type": "object",
   "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Email or ID of the authenticated user who owns this case. Optional for legacy demo cases; always written on new cases."
+    },
     "procedure_key": {
       "type": "string",
       "description": "Workflow/procedure ID"
@@ -92,6 +96,10 @@
     "confidence": {
       "type": "number",
       "description": "AI classification confidence 0-1"
+    },
+    "estimated_time_saved_min": {
+      "type": "number",
+      "description": "Optional estimated minutes saved vs. doing this manually"
     }
   },
   "required": [
