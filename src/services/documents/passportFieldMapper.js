@@ -55,20 +55,18 @@ export function mapProfileToPassportForm(profile, options = {}) {
   // Birth date boxes
   const birthDate = parseDateBoxes(profile?.birth_date);
 
-  // Name boxes — 26 chars each
-  const numeBoxes = toCharBoxes(profile?.last_name || '', 26);
-  const prenumeBoxes = toCharBoxes(profile?.first_name || '', 26);
-  const numeAnteriorBoxes = toCharBoxes(profile?.maiden_name || '', 26);
+  // Name boxes — sized to fit inside the form frame after the label column.
+  const numeBoxes = toCharBoxes(profile?.last_name || '', 33);
+  const prenumeBoxes = toCharBoxes(profile?.first_name || '', 32);
+  const numeAnteriorBoxes = toCharBoxes(profile?.maiden_name || '', 31);
 
-  // Father / mother — 18 chars each
-  const tatBoxes = toCharBoxes(profile?.father_name || '', 18);
-  const mamBoxes = toCharBoxes(profile?.mother_name || '', 18);
+  // Father / mother — fit each into half the row width.
+  const tatBoxes = toCharBoxes(profile?.father_name || '', 17);
+  const mamBoxes = toCharBoxes(profile?.mother_name || '', 17);
 
-  // Birth place — 24 chars
+  // Birth place + Judet — share one row; lengths chosen so neither overflows.
   const locuNasterii = toCharBoxes(profile?.birth_place || '', 24);
-
-  // County — 14 chars
-  const judetBoxes = toCharBoxes(profile?.county || '', 14);
+  const judetBoxes = toCharBoxes(profile?.county || '', 6);
 
   // Domiciliu — free text
   const domiciliu = [profile?.address_line_1, profile?.city, profile?.county]

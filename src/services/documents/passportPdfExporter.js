@@ -43,9 +43,11 @@ const BOX_GAP = 1;     // gap between boxes
  * @param highlight  - 'missing' | 'filled' | 'normal'
  * @param font       - font to use
  */
-function drawCharBoxes(page, chars, x, y, highlight = 'normal', font, fontSize = 8) {
+function drawCharBoxes(page, chars, x, y, highlight = 'normal', font, fontSize = 8, maxRight = null) {
   chars.forEach((ch, i) => {
     const bx = x + i * (BOX_SIZE + BOX_GAP);
+    // Boundary protection: skip rendering any box that would overflow the allowed right edge.
+    if (maxRight != null && bx + BOX_SIZE > maxRight) return;
     const isMissing = !ch && highlight === 'missing';
     const bg = isMissing ? rgb(1, 0.93, 0.88) : ch ? rgb(0.94, 0.97, 1) : WHITE;
     page.drawRectangle({ x: bx, y, width: BOX_SIZE, height: BOX_SIZE, color: bg });
@@ -55,6 +57,13 @@ function drawCharBoxes(page, chars, x, y, highlight = 'normal', font, fontSize =
       page.drawText(ch, { x: bx + (BOX_SIZE - cw) / 2, y: y + 3, size: fontSize, font, color: BLUE });
     }
   });
+}
+
+/** Compute the maximum number of BOX_SIZE+BOX_GAP boxes that fit between startX and maxRight. */
+function maxBoxesThatFit(startX, maxRight) {
+  const avail = maxRight - startX;
+  if (avail <= 0) return 0;
+  return Math.max(0, Math.floor((avail + BOX_GAP) / (BOX_SIZE + BOX_GAP)));
 }
 
 /** Draw a filled or empty checkbox */
@@ -110,6 +119,9 @@ export async function exportStructuredPassportPdf(profile, options = {}) {
   const formH = PAGE_H - MT - MB - 25; // 25 for banner
 
   page.drawRectangle({ x: formX, y: PAGE_H - 25 - MT - formH, width: formW, height: formH, borderColor: rgb(0.4, 0.55, 0.7), borderWidth: 2 });
+
+  // Right boundary that no character-box row is allowed to cross.
+  const formRight = formX + formW - 2;
 
   // ── TITLE AREA ──────────────────────────────────────────────────
   let curY = PAGE_H - 25 - MT - 12; // starting y inside form
@@ -192,21 +204,21 @@ export async function exportStructuredPassportPdf(profile, options = {}) {
   const numeRowY = curY - ROW_H;
   page.drawRectangle({ x: formX, y: numeRowY, width: formW, height: ROW_H + 6, borderColor: BORDER, borderWidth: 0.5 });
   drawLabeledRow(page, 'Numele', formX, numeRowY, 48, ROW_H + 6, regular, bold, 8);
-  drawCharBoxes(page, data.numeBoxes, formX + 50, numeRowY + 4, data.missing.includes('Nume') ? 'missing' : 'filled', bold, 8);
+  drawCharBoxes(page, data.numeBoxes, formX + 50, numeRowY + 4, data.missing.includes('Nume') ? 'missing' : 'filled', bold, 8, formRight);
   curY = numeRowY - 4;
 
   // ── ROW 3: PRENUMELE ────────────────────────────────────────────
   const prenRowY = curY - ROW_H;
   page.drawRectangle({ x: formX, y: prenRowY, width: formW, height: ROW_H + 6, borderColor: BORDER, borderWidth: 0.5 });
   drawLabeledRow(page, 'Prenumele', formX, prenRowY, 52, ROW_H + 6, regular, bold, 8);
-  drawCharBoxes(page, data.prenumeBoxes, formX + 54, prenRowY + 4, data.missing.includes('Prenume') ? 'missing' : 'filled', bold, 8);
+  drawCharBoxes(page, data.prenumeBoxes, formX + 54, prenRowY + 4, data.missing.includes('Prenume') ? 'missing' : 'filled', bold, 8, formRight);
   curY = prenRowY - 4;
 
   // ── ROW 4: NUMELE ANTERIOR ──────────────────────────────────────
   const naRowY = curY - ROW_H;
   page.drawRectangle({ x: formX, y: naRowY, width: formW, height: ROW_H + 6, borderColor: BORDER, borderWidth: 0.5 });
   drawLabeledRow(page, 'Numele anterior', formX, naRowY, 72, ROW_H + 6, regular, bold, 8);
-  drawCharBoxes(page, data.numeAnteriorBoxes, formX + 74, naRowY + 4, 'normal', bold, 8);
+  drawCharBoxes(page, data.numeAnteriorBoxes, formX + 74, naRowY + 4, 'normal', bold, 8, formRight);
   curY = naRowY - 4;
 
   // ── ROW 5: TATA + MAMA ──────────────────────────────────────────
@@ -223,8 +235,8 @@ export async function exportStructuredPassportPdf(profile, options = {}) {
 
   const tatMissing = data.missing.includes('Prenumele tatalui') ? 'missing' : 'filled';
   const mamMissing = data.missing.includes('Prenumele mamei') ? 'missing' : 'filled';
-  drawCharBoxes(page, data.tatBoxes, formX + 4, parentRowY + 4, tatMissing, bold, 8);
-  drawCharBoxes(page, data.mamBoxes, formX + halfW + 4, parentRowY + 4, mamMissing, bold, 8);
+  drawCharBoxes(page, data.tatBoxes, formX + 4, parentRowY + 4, tatMissing, bold, 8, formX + halfW - 2);
+  drawCharBoxes(page, data.mamBoxes, formX + halfW + 4, parentRowY + 4, mamMissing, bold, 8, formRight);
 
   curY = parentRowY - 4;
 
@@ -234,12 +246,12 @@ export async function exportStructuredPassportPdf(profile, options = {}) {
   drawLabeledRow(page, 'Locul nasterii', formX, locRowY, 62, ROW_H + 6, regular, bold, 8);
 
   const locMissing = data.missing.includes('Locul nasterii') ? 'missing' : 'filled';
-  drawCharBoxes(page, data.locuNasterii, formX + 64, locRowY + 4, locMissing, bold, 8);
-
-  // Judet
+  // Judet label position is fixed; cap Locul nasterii so it never crosses into the Judet column.
   const judetLblX = formX + 64 + 24 * (BOX_SIZE + BOX_GAP) + 8;
+  drawCharBoxes(page, data.locuNasterii, formX + 64, locRowY + 4, locMissing, bold, 8, judetLblX - 4);
+
   page.drawText('Judetul', { x: judetLblX, y: locRowY + 6, size: 8, font: bold, color: BLACK });
-  drawCharBoxes(page, data.judetBoxes, judetLblX + 42, locRowY + 4, data.missing.includes('Judet') ? 'missing' : 'filled', bold, 8);
+  drawCharBoxes(page, data.judetBoxes, judetLblX + 42, locRowY + 4, data.missing.includes('Judet') ? 'missing' : 'filled', bold, 8, formRight);
 
   curY = locRowY - 4;
 
