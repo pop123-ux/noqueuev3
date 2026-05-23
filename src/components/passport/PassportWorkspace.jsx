@@ -2,16 +2,18 @@
  * PassportWorkspace — Full passport application workspace
  * Autofill from Seif, review fields, generate & export PDF draft
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, CheckCircle2, AlertTriangle, FileText, Download,
-  RefreshCw, Edit3, Globe, Clock, MapPin, Shield, ChevronDown,
+  Edit3, Globe, Clock, MapPin, Shield, ChevronDown,
   ChevronUp, ExternalLink, Loader2, Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { passportProcedure, matchPassportProfile } from '@/lib/rag/passportProcedure';
-import { generatePassportDraft, exportPassportPdf } from '@/services/documents/pdfAutoFillService';
+import { exportStructuredPassportPdf } from '@/services/documents/passportPdfExporter';
+import { mapProfileToPassportForm } from '@/services/documents/passportFieldMapper';
+import StructuredPassportPreview from '@/components/documents/StructuredPassportPreview';
 
 function Section({ title, icon: SectionIcon, color = 'text-primary', children, defaultOpen = true, badge }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -87,36 +89,29 @@ function FieldEditor({ fields, onChange }) {
 }
 
 export default function PassportWorkspace({ profile, caseData }) {
-  const [draft, setDraft] = useState(null);
-  const [generating, setGenerating] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [editedFields, setEditedFields] = useState({});
+  const [editedProfile, setEditedProfile] = useState(null);
 
-  const { filled, missing, readiness } = matchPassportProfile(profile);
+  const activeProfile = editedProfile || profile;
+  const { filled, missing, readiness } = matchPassportProfile(activeProfile);
+  const formData = mapProfileToPassportForm(activeProfile, { isUrgent: true });
 
-  const handleGenerate = useCallback(async () => {
-    setGenerating(true);
-    await new Promise(r => setTimeout(r, 900)); // UX delay for "thinking"
-    const d = generatePassportDraft(profile);
-    setDraft(d);
-    setEditedFields(d.editableFields);
-    setGenerating(false);
-  }, [profile]);
-
+  const KEY_MAP = { address: 'address_line_1', full_name: 'full_name' };
   const handleFieldChange = (key, value) => {
-    setEditedFields(prev => ({ ...prev, [key]: value }));
+    const profileKey = KEY_MAP[key] || key;
+    setEditedProfile(prev => ({ ...(prev || profile || {}), [profileKey]: value }));
   };
 
   const handleExport = async () => {
     setExporting(true);
-    const updatedDraft = { ...draft, editableFields: editedFields };
-    const pdfBytes = await exportPassportPdf(updatedDraft);
+    const pdfBytes = await exportStructuredPassportPdf(activeProfile, { isUrgent: true });
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `pasaport_cerere_draft_${Date.now()}.pdf`;
+    a.download = `cerere_pasaport_ciorna_${Date.now()}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
     setExporting(false);
@@ -154,89 +149,75 @@ export default function PassportWorkspace({ profile, caseData }) {
           </p>
         </div>
 
-        {!draft ? (
+        {/* Action buttons */}
+        <div className="flex flex-wrap gap-2">
           <Button
-            onClick={handleGenerate}
-            disabled={generating}
-            className="w-full h-12 rounded-xl text-base font-semibold"
-            style={{ background: 'linear-gradient(135deg, #2563eb, #0ea5e9)', border: 'none' }}
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex-1 h-11 rounded-xl text-sm font-semibold"
+            style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', border: 'none' }}
           >
-            {generating ? (
-              <><Loader2 className="w-5 h-5 animate-spin mr-2" />Autofilling din Seif...</>
-            ) : (
-              <><Sparkles className="w-5 h-5 mr-2" />Genereaza Cerere din Seif</>
-            )}
+            {exporting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Download className="w-4 h-4 mr-2" />}
+            Export PDF Draft
           </Button>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={handleExport}
-              disabled={exporting}
-              className="flex-1 h-10 rounded-xl text-sm font-semibold"
-              style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)' }}
-            >
-              {exporting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Download className="w-4 h-4 mr-2" />}
-              Export PDF Draft
-            </Button>
-            <Button
-              onClick={() => setEditing(!editing)}
-              variant="outline"
-              className="h-10 rounded-xl text-sm border-white/15 text-slate-300"
-            >
-              <Edit3 className="w-4 h-4 mr-1.5" /> {editing ? 'Ascunde editor' : 'Editeaza campuri'}
-            </Button>
-            <Button
-              onClick={handleGenerate}
-              variant="ghost"
-              className="h-10 rounded-xl text-sm text-slate-400"
-            >
-              <RefreshCw className="w-4 h-4 mr-1.5" /> Regenereaza
-            </Button>
-          </div>
-        )}
+          <Button
+            onClick={() => setShowPreview(!showPreview)}
+            variant="outline"
+            className="h-11 rounded-xl text-sm border-white/15 text-slate-300"
+          >
+            <FileText className="w-4 h-4 mr-1.5" /> {showPreview ? 'Ascunde previzualizare' : 'Previzualizeaza formular'}
+          </Button>
+          <Button
+            onClick={() => setEditing(!editing)}
+            variant="ghost"
+            className="h-11 rounded-xl text-sm text-slate-400"
+          >
+            <Edit3 className="w-4 h-4 mr-1.5" /> {editing ? 'Ascunde editor' : 'Editeaza campuri'}
+          </Button>
+        </div>
       </div>
 
-      {/* AI Summary — shown after generation */}
-      {draft && (
-        <Section title="Rezumat AI" icon={Sparkles} color="text-primary" defaultOpen={true}>
-          <div className="rounded-xl p-4 text-sm text-slate-200 leading-relaxed" style={{ background: 'rgba(37,99,235,0.06)', border: '1px solid rgba(37,99,235,0.15)' }}>
-            <p className="mb-3">
-              Cererea ta de pasaport a fost pregatita automat folosind datele din <strong className="text-white">Seif/Profile Safe</strong>.
-            </p>
-            {draft.filledFieldLabels?.length > 0 && (
-              <div className="mb-3">
-                <p className="text-[11px] font-semibold text-green-400 uppercase tracking-wider mb-2">Completat automat din Seif:</p>
-                <div className="space-y-1">
-                  {draft.filledFieldLabels.map((l, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-400 shrink-0" />
-                      <span>{l}</span>
-                    </div>
-                  ))}
-                </div>
+      {/* Structured Form Preview */}
+      <AnimatePresence>
+        {showPreview && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="rounded-2xl overflow-hidden p-4" style={{ background: 'rgba(17,28,51,0.7)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold text-white">Previzualizare Formular Structurat</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-warning/15 text-warning font-semibold">Anexa 10</span>
               </div>
-            )}
-            {draft.missingFieldLabels?.length > 0 && (
-              <div>
-                <p className="text-[11px] font-semibold text-warning uppercase tracking-wider mb-2">Necesita completare manuala:</p>
-                <div className="space-y-1">
-                  {draft.missingFieldLabels.map((l, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs">
-                      <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />
-                      <span className="text-slate-400">{l}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </Section>
-      )}
+              <StructuredPassportPreview profile={activeProfile} options={{ isUrgent: true }} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Editable Fields */}
-      {draft && editing && (
-        <Section title="Editeaza Campuri" icon={Edit3} color="text-accent" defaultOpen={true} badge={`${draft.missingFieldLabels?.length} lipsa`}>
-          <FieldEditor fields={editedFields} onChange={handleFieldChange} />
+      {editing && (
+        <Section title="Editeaza Campuri" icon={Edit3} color="text-accent" defaultOpen={true} badge={`${formData.missing.length} lipsa`}>
+          <FieldEditor fields={{
+            full_name: [activeProfile?.first_name, activeProfile?.last_name].filter(Boolean).join(' '),
+            first_name: activeProfile?.first_name || '',
+            last_name: activeProfile?.last_name || '',
+            cnp: activeProfile?.cnp || '',
+            birth_date: activeProfile?.birth_date || '',
+            birth_place: activeProfile?.birth_place || '',
+            father_name: activeProfile?.father_name || '',
+            mother_name: activeProfile?.mother_name || '',
+            id_series: activeProfile?.id_series || '',
+            id_number: activeProfile?.id_number || '',
+            address: activeProfile?.address_line_1 || '',
+            city: activeProfile?.city || '',
+            county: activeProfile?.county || '',
+            phone: activeProfile?.phone || '',
+            email: activeProfile?.email || '',
+          }} onChange={handleFieldChange} />
           <Button
             onClick={handleExport}
             disabled={exporting}
@@ -250,7 +231,7 @@ export default function PassportWorkspace({ profile, caseData }) {
       )}
 
       {/* Seif Compatibility */}
-      <Section title="Compatibilitate Seif" icon={Shield} color="text-green-400" defaultOpen={!draft}>
+      <Section title="Compatibilitate Seif" icon={Shield} color="text-green-400" defaultOpen={true}>
         <div className="space-y-4">
           <div>
             <div className="flex justify-between text-xs mb-1.5">
