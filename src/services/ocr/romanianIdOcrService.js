@@ -175,7 +175,7 @@ export async function extractRomanianIdData({ file, onProgress = () => {} }) {
   const result = await base44.integrations.Core.InvokeLLM({
     prompt: OCR_PROMPT,
     file_urls: [file_url],
-    model: 'claude_sonnet_4_6',
+    model: 'gemini_3_1_pro',
     response_json_schema: OCR_SCHEMA,
   });
   audit('llm_extraction_completed');
@@ -200,13 +200,36 @@ export async function extractRomanianIdData({ file, onProgress = () => {} }) {
   const warnings = buildWarnings(result, confidence);
   audit('confidence_computed');
 
+  // Strict success: all critical fields must be present AND individually reliable.
+  // Prevents passing through scans where only partial data was extracted.
+  const CRITICAL_FIELDS = [
+    'cnp', 'id_series', 'id_number',
+    'last_name', 'first_name',
+    'id_issue_date', 'id_expiry_date',
+  ];
+  const MIN_FIELD_CONFIDENCE = 0.9;
+  const missingCritical = CRITICAL_FIELDS.filter(k => !result[k]);
+  const unreliableCritical = CRITICAL_FIELDS.filter(
+    k => result[k] && (confidence[k] ?? 0) < MIN_FIELD_CONFIDENCE
+  );
+  const success =
+    missingCritical.length === 0 &&
+    unreliableCritical.length === 0 &&
+    confidence.overall >= 0.75;
+
+  if (!success) {
+    audit(`success_blocked missing=[${missingCritical.join(',')}] unreliable=[${unreliableCritical.join(',')}] overall=${confidence.overall.toFixed(2)}`);
+  }
+
   return {
-    success: confidence.overall > 0.4,
+    success,
     extractedData: result,
     confidence,
     warnings,
     fileUrl: file_url,
     auditTrail,
+    missingCritical,
+    unreliableCritical,
   };
 }
 
