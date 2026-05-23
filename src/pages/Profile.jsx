@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Zap, Shield, Briefcase, Bell, LogOut, User, ChevronRight, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
+import EditableProfileForm from '@/components/profile/EditableProfileForm';
 
 export default function Profile() {
   const { data: user, isLoading } = useQuery({
@@ -67,6 +68,9 @@ export default function Profile() {
             <p className="text-xs text-slate-400">{user?.email}</p>
           </div>
         </div>
+
+        {/* Editable Safe Profile form (powers auto-fill across the app) */}
+        <EditableProfileForm profile={profile} userEmail={user?.email} />
 
         {/* Identity Vault card */}
         <Link to="/vault" className="block">
