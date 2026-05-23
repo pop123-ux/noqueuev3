@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Play, Building2, Clock, RotateCcw, FileCheck, MapPin, Briefcase } from 'lucide-react';
+import { ArrowRight, Building2, Clock, RotateCcw, FileCheck, MapPin, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const metrics = [
@@ -58,11 +58,11 @@ export default function Hero() {
                   <Briefcase className="w-4 h-4" /> My Cases
                 </Button>
               </Link>
-              <a href="#chat">
-                <Button size="lg" variant="outline" className="border-white/10 text-white hover:bg-white/5 rounded-2xl px-6 h-12 text-base font-semibold gap-2">
-                  <Play className="w-4 h-4" /> Try Chat Demo
+              <Link to="/digital-vault">
+                <Button size="lg" variant="outline" className="border-accent/30 text-accent hover:bg-accent/10 rounded-2xl px-6 h-12 text-base font-semibold gap-2">
+                  🗂️ Digital Vault
                 </Button>
-              </a>
+              </Link>
             </div>
 
             {/* Metrics */}

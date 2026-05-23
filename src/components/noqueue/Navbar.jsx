@@ -48,9 +48,9 @@ export default function Navbar() {
               <Shield className="w-3.5 h-3.5" />
               Seif
             </Link>
-            <Link to="/digital-vault" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
-              <FolderOpen className="w-3.5 h-3.5" />
-              Vault
+            <Link to="/digital-vault" className="px-3 py-2 text-sm text-white font-semibold transition-colors rounded-lg bg-accent/10 border border-accent/20 hover:bg-accent/20 flex items-center gap-1.5">
+              <FolderOpen className="w-3.5 h-3.5 text-accent" />
+              <span className="text-accent">Vault</span>
             </Link>
             <Link to="/profile" className="px-3 py-2 text-sm text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex items-center gap-1.5">
               <User className="w-3.5 h-3.5" />
