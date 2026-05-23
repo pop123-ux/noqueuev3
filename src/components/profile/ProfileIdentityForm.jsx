@@ -128,11 +128,11 @@ export default function ProfileIdentityForm({ profile, onSave, saving }) {
   return (
     <form onSubmit={handleSubmit(onSave)} className="space-y-0">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-        {section('Personal Details')}
-        <FormInput label="Last name (Nume)" name="last_name" register={register} errors={errors} required />
-        <FormInput label="First name (Prenume)" name="first_name" register={register} errors={errors} required />
+        {section('Date personale')}
+        <FormInput label="Prenume" name="first_name" register={register} errors={errors} required />
+        <FormInput label="Nume de familie" name="last_name" register={register} errors={errors} required />
 
-        <Field label="CNP (13 digits)" error={errors.cnp?.message} required>
+        <Field label="CNP (13 cifre)" error={errors.cnp?.message} required>
           <Input
             placeholder="1234567890123"
             {...register('cnp')}
@@ -146,28 +146,45 @@ export default function ProfileIdentityForm({ profile, onSave, saving }) {
             {...register('sex')}
             className="w-full h-9 px-3 rounded-md bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-primary/50"
           >
-            <option value="">— Select —</option>
-            <option value="M">Male (Masculin)</option>
-            <option value="F">Female (Feminin)</option>
+            <option value="">— Selectează —</option>
+            <option value="M">Masculin</option>
+            <option value="F">Feminin</option>
           </select>
         </Field>
 
-        <FormInput label="Date of birth" name="birth_date" register={register} errors={errors} type="date" />
-        <FormInput label="Place of birth (Localitatea nașterii)" name="birth_place" register={register} errors={errors} placeholder="Cluj-Napoca" />
-        <FormInput label="Father's first name" name="father_name" register={register} errors={errors} />
-        <FormInput label="Mother's first name" name="mother_name" register={register} errors={errors} />
+        <FormInput label="Data nașterii" name="birth_date" register={register} errors={errors} type="date" />
+        <FormInput label="Locul nașterii" name="birth_place" register={register} errors={errors} placeholder="Cluj-Napoca" />
 
-        {/* Biometric fields for passport auto-fill */}
-        <Field label="Înălțime (cm)" error={errors.height_cm?.message}>
-          <Input
-            type="number"
-            min={50} max={250}
-            placeholder="175"
-            {...register('height_cm')}
-            className="bg-white/[0.04] border-white/10 text-white placeholder:text-slate-600 h-9 text-sm focus:border-primary/50"
-          />
-          <p className="text-[10px] text-slate-600 mt-0.5 flex items-center gap-1">
-            <span className="text-accent">✦</span> Folosit pentru auto-completare pasaport (Semnalmente)
+        <FormInput label="Prenumele tatălui" name="father_name" register={register} errors={errors} placeholder="Ion" />
+        <FormInput label="Prenumele mamei" name="mother_name" register={register} errors={errors} placeholder="Maria" />
+
+        <Field label="Stare civilă">
+          <select
+            {...register('marital_status')}
+            className="w-full h-9 px-3 rounded-md bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-primary/50"
+          >
+            <option value="">— Selectează —</option>
+            <option value="single">Necăsătorit/ă</option>
+            <option value="married">Căsătorit/ă</option>
+            <option value="divorced">Divorțat/ă</option>
+            <option value="widowed">Văduv/ă</option>
+          </select>
+        </Field>
+
+        {/* Biometric fields — passport Semnalmente auto-fill */}
+        <Field label="Înălțime" error={errors.height_cm?.message}>
+          <div className="relative">
+            <Input
+              type="number"
+              min={50} max={250}
+              placeholder="180"
+              {...register('height_cm')}
+              className="bg-white/[0.04] border-white/10 text-white placeholder:text-slate-600 h-9 text-sm focus:border-primary/50 pr-10"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 pointer-events-none">cm</span>
+          </div>
+          <p className="text-[10px] text-accent/70 mt-0.5 flex items-center gap-1">
+            <span>✦</span> Auto-completare pasaport (Semnalmente)
           </p>
         </Field>
 
@@ -176,7 +193,7 @@ export default function ProfileIdentityForm({ profile, onSave, saving }) {
             {...register('eye_color')}
             className="w-full h-9 px-3 rounded-md bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-primary/50"
           >
-            <option value="">— Selecteaza —</option>
+            <option value="">— Selectează —</option>
             <option value="Căprui">Căprui</option>
             <option value="Albaștri">Albaștri</option>
             <option value="Verzi">Verzi</option>
@@ -186,57 +203,44 @@ export default function ProfileIdentityForm({ profile, onSave, saving }) {
             <option value="Hazel">Hazel</option>
             <option value="Altele">Altele</option>
           </select>
-          <p className="text-[10px] text-slate-600 mt-0.5 flex items-center gap-1">
-            <span className="text-accent">✦</span> Folosit pentru auto-completare pasaport (Semnalmente)
+          <p className="text-[10px] text-accent/70 mt-0.5 flex items-center gap-1">
+            <span>✦</span> Auto-completare pasaport (Semnalmente)
           </p>
         </Field>
 
-        <Field label="Marital status">
-          <select
-            {...register('marital_status')}
-            className="w-full h-9 px-3 rounded-md bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-primary/50"
-          >
-            <option value="">— Select —</option>
-            <option value="single">Single (Necăsătorit/ă)</option>
-            <option value="married">Married (Căsătorit/ă)</option>
-            <option value="divorced">Divorced (Divorțat/ă)</option>
-            <option value="widowed">Widowed (Văduv/ă)</option>
-          </select>
-        </Field>
-
         {section('Contact')}
-        <FormInput label="Email" name="email" register={register} errors={errors} type="email" placeholder="your@email.ro" />
-        <FormInput label="Phone" name="phone" register={register} errors={errors} placeholder="+40 7XX XXX XXX" />
-        <FormInput label="Citizenship" name="citizenship" register={register} errors={errors} placeholder="RO" />
+        <FormInput label="Telefon" name="phone" register={register} errors={errors} placeholder="+40 7XX XXX XXX" />
+        <FormInput label="Email de contact" name="email" register={register} errors={errors} type="email" placeholder="your@email.ro" />
+        <FormInput label="Cetățenie" name="citizenship" register={register} errors={errors} placeholder="RO" />
 
-        {section('Address / Domiciliu')}
+        {section('Adresă / Domiciliu')}
         <div className="sm:col-span-2">
-          <FormInput label="Street address (Stradă, nr.)" name="address_line_1" register={register} errors={errors} placeholder="Str. Exemplu nr. 1, Ap. 2" />
+          <FormInput label="Stradă, număr" name="address_line_1" register={register} errors={errors} placeholder="Str. Exemplu nr. 1, Ap. 2" />
         </div>
-        <FormInput label="Address line 2" name="address_line_2" register={register} errors={errors} />
-        <FormInput label="City (Localitate)" name="city" register={register} errors={errors} placeholder="Cluj-Napoca" />
+        <FormInput label="Adresă linie 2" name="address_line_2" register={register} errors={errors} />
+        <FormInput label="Localitate" name="city" register={register} errors={errors} placeholder="Cluj-Napoca" />
 
-        <Field label="County (Județ)" error={errors.county?.message}>
+        <Field label="Județ" error={errors.county?.message}>
           <select
             {...register('county')}
             className="w-full h-9 px-3 rounded-md bg-white/[0.04] border border-white/10 text-white text-sm focus:outline-none focus:border-primary/50"
           >
-            <option value="">— Select county —</option>
+            <option value="">— Selectează județ —</option>
             {COUNTIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </Field>
 
-        <FormInput label="Postal code" name="postal_code" register={register} errors={errors} placeholder="400001" />
-        <FormInput label="Country" name="country" register={register} errors={errors} placeholder="Romania" />
+        <FormInput label="Cod poștal" name="postal_code" register={register} errors={errors} placeholder="400001" />
+        <FormInput label="Țara" name="country" register={register} errors={errors} placeholder="Romania" />
 
-        {section('Identity Card (Carte de Identitate)')}
-        <FormInput label="CI Series (Serie)" name="id_series" register={register} errors={errors} placeholder="CJ" />
-        <FormInput label="CI Number (Număr)" name="id_number" register={register} errors={errors} placeholder="123456" />
+        {section('Act de identitate (CI)')}
+        <FormInput label="Serie CI" name="id_series" register={register} errors={errors} placeholder="CJ" />
+        <FormInput label="Număr CI" name="id_number" register={register} errors={errors} placeholder="123456" />
         <div className="sm:col-span-2">
-          <FormInput label="Issued by (Emisă de)" name="id_issued_by" register={register} errors={errors} placeholder="SPCLEP Cluj-Napoca" />
+          <FormInput label="Emisă de" name="id_issued_by" register={register} errors={errors} placeholder="SPCLEP Cluj-Napoca" />
         </div>
-        <FormInput label="Issue date" name="id_issue_date" register={register} errors={errors} type="date" />
-        <FormInput label="Expiry date" name="id_expiry_date" register={register} errors={errors} type="date" />
+        <FormInput label="Data emiterii" name="id_issue_date" register={register} errors={errors} type="date" />
+        <FormInput label="Data expirării" name="id_expiry_date" register={register} errors={errors} type="date" />
       </div>
 
       <div className="pt-6">
@@ -246,8 +250,8 @@ export default function ProfileIdentityForm({ profile, onSave, saving }) {
           className="w-full bg-primary hover:bg-primary/90 rounded-xl h-11"
         >
           {saving
-            ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Saving…</>
-            : <><CheckCircle2 className="w-4 h-4 mr-2" />Save Profile</>
+            ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Se salvează…</>
+            : <><CheckCircle2 className="w-4 h-4 mr-2" />Salvează în Seif</>
           }
         </Button>
       </div>
