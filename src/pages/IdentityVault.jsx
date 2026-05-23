@@ -8,8 +8,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Shield, User, CreditCard, MapPin, PenLine, FolderOpen,
-  Lock, Zap, Loader2, CheckCircle2, Eye, EyeOff, Save, AlertTriangle, ChevronRight
+  Lock, Zap, Loader2, CheckCircle2, Eye, EyeOff, Save, AlertTriangle, ChevronRight, Ruler
 } from 'lucide-react';
+
+const EYE_COLOR_OPTIONS = ['Căprui', 'Albaștri', 'Verzi', 'Negri', 'Gri', 'Căprui-verzui', 'Hazel', 'Altele'];
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
@@ -268,6 +270,44 @@ export default function IdentityVault() {
                     <option value="widowed">Văduv/ă</option>
                   </select>
                 </div>
+
+                {/* Semnalmente — folosite la auto-completarea cererii de pașaport */}
+                <div className="pt-3 mt-3 border-t border-white/5">
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <Ruler className="w-3.5 h-3.5 text-accent" />
+                    <p className="text-xs font-semibold text-white">Semnalmente</p>
+                    <span className="text-[10px] text-slate-500">— folosite la pașaport</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Înălțime (cm)</label>
+                      <Input
+                        type="number"
+                        min={50}
+                        max={250}
+                        value={profileData.height_cm ?? ''}
+                        onChange={e => {
+                          const v = e.target.value;
+                          setProfileData(p => ({ ...p, height_cm: v === '' ? null : Number(v) }));
+                        }}
+                        placeholder="180"
+                        className="bg-white/[0.04] border-white/10 text-white placeholder:text-slate-600 rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Culoarea ochilor</label>
+                      <select
+                        value={profileData.eye_color || ''}
+                        onChange={e => setProfileData(p => ({ ...p, eye_color: e.target.value || null }))}
+                        className="w-full bg-white/[0.04] border border-white/10 text-white rounded-xl px-3 py-2 text-sm"
+                      >
+                        <option value="">Selectează</option>
+                        {EYE_COLOR_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
                 <Button onClick={() => saveProfile.mutate(profileData)} disabled={saveProfile.isPending} className="w-full rounded-xl">
                   {saveProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   Salvează în Seif
@@ -328,13 +368,27 @@ export default function IdentityVault() {
           {tab === 'signature' && (
             <motion.div key="signature" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <div className="glass-card rounded-2xl p-5 border border-white/8 space-y-4">
-                <p className="text-sm text-slate-400">Încarcă o imagine cu semnătura ta pentru a fi inclusă în documentele generate.</p>
-                {secretData.signature_file_url && (
-                  <div className="rounded-xl border border-white/10 p-3 bg-white/[0.02]">
-                    <p className="text-xs text-slate-400 mb-2">Previzualizare semnătură</p>
-                    <img src={secretData.signature_file_url} alt="Semnătură" className="max-h-20 object-contain" />
+                <p className="text-sm text-slate-400">Încarcă o imagine cu semnătura ta pentru a fi inclusă în documentele generate (pașaport, cereri, etc.).</p>
+
+                {/* Signature preview — read from profile (PDF mapper source of truth) with secret fallback */}
+                {(profileData.signature_file_url || secretData.signature_file_url) && (
+                  <div className="rounded-xl border border-white/10 p-4 bg-white/[0.02]">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs text-slate-400">Previzualizare semnătură</p>
+                      <span className="flex items-center gap-1 text-[10px] text-success">
+                        <CheckCircle2 className="w-3 h-3" /> Conectată la pașaport
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-center bg-white rounded-lg p-3 min-h-[80px]">
+                      <img
+                        src={profileData.signature_file_url || secretData.signature_file_url}
+                        alt="Semnătură"
+                        className="max-h-20 max-w-full object-contain"
+                      />
+                    </div>
                   </div>
                 )}
+
                 <label className="block">
                   <span className="text-xs text-slate-400">Upload semnătură (PNG/JPG)</span>
                   <input
@@ -350,12 +404,25 @@ export default function IdentityVault() {
                       if (!rl.allowed) { alert(rl.message); return; }
                       const { file_url } = await base44.integrations.Core.UploadFile({ file });
                       await audit.fileUploaded(user?.email || 'anon', file.type);
+                      // Persist to BOTH entities so PDF auto-fill (profile-based) and vault (secret-based) stay in sync
                       setSecretData(s => ({ ...s, signature_file_url: file_url }));
+                      setProfileData(p => ({ ...p, signature_file_url: file_url, signature_collected: true }));
                     }}
                   />
                 </label>
-                <Button onClick={() => saveSecret.mutate(secretData)} disabled={saveSecret.isPending} className="w-full rounded-xl">
-                  {saveSecret.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+
+                <Button
+                  onClick={async () => {
+                    // Save to both: IdentitySecret (encrypted vault) and UserPrivateProfile (used by passport PDF auto-fill)
+                    await Promise.all([
+                      saveSecret.mutateAsync(secretData),
+                      saveProfile.mutateAsync(profileData),
+                    ]);
+                  }}
+                  disabled={saveSecret.isPending || saveProfile.isPending}
+                  className="w-full rounded-xl"
+                >
+                  {(saveSecret.isPending || saveProfile.isPending) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   Salvează în Seif
                 </Button>
               </div>
