@@ -9,14 +9,18 @@ import Navbar from '@/components/noqueue/Navbar';
 import SmartDocUploader from '@/components/smartDoc/SmartDocUploader';
 import SmartDocPipeline from '@/components/smartDoc/SmartDocPipeline';
 import SmartDocReport from '@/components/smartDoc/SmartDocReport';
+import SmartDocBulkQueue from '@/components/smartDoc/SmartDocBulkQueue';
+import SmartDocBulkResults from '@/components/smartDoc/SmartDocBulkResults';
 import { analyzeDocument } from '@/services/documents/smartDocumentAnalyzer';
 
 export default function SmartDocAnalyzer() {
-  const [phase, setPhase] = useState('idle'); // idle | analyzing | done | error
+  const [phase, setPhase] = useState('idle'); // idle | analyzing | done | error | bulk_analyzing | bulk_done
   const [step, setStep] = useState(0);
   const [stepLabel, setStepLabel] = useState('');
   const [report, setReport] = useState(null);
   const [error, setError] = useState(null);
+  const [bulkItems, setBulkItems] = useState([]);
+  const [bulkIndex, setBulkIndex] = useState(0);
 
   const handleFile = async (file) => {
     setPhase('analyzing');
@@ -38,11 +42,35 @@ export default function SmartDocAnalyzer() {
     }
   };
 
+  const handleFiles = async (files) => {
+    // Sequential bulk analysis — keeps integration credit usage predictable
+    // and lets the user watch progress per file.
+    const initial = files.map(file => ({ file, status: 'pending', report: null, error: null }));
+    setBulkItems(initial);
+    setBulkIndex(0);
+    setPhase('bulk_analyzing');
+
+    for (let i = 0; i < files.length; i++) {
+      setBulkIndex(i);
+      setBulkItems(prev => prev.map((it, idx) => idx === i ? { ...it, status: 'analyzing' } : it));
+      try {
+        const result = await analyzeDocument(files[i], (_, label) => setStepLabel(label));
+        setBulkItems(prev => prev.map((it, idx) => idx === i ? { ...it, status: 'done', report: result } : it));
+      } catch (err) {
+        console.warn(`Bulk analysis failed for ${files[i].name}:`, err);
+        setBulkItems(prev => prev.map((it, idx) => idx === i ? { ...it, status: 'error', error: err?.message || 'Eroare' } : it));
+      }
+    }
+    setPhase('bulk_done');
+  };
+
   const handleReset = () => {
     setPhase('idle');
     setReport(null);
     setError(null);
     setStep(0);
+    setBulkItems([]);
+    setBulkIndex(0);
   };
 
   return (
@@ -70,10 +98,18 @@ export default function SmartDocAnalyzer() {
         </motion.div>
 
         {/* Main content */}
-        {phase === 'idle' && <SmartDocUploader onFile={handleFile} />}
+        {phase === 'idle' && <SmartDocUploader onFile={handleFile} onFiles={handleFiles} />}
 
         {phase === 'analyzing' && (
           <SmartDocPipeline currentStep={step} currentLabel={stepLabel} />
+        )}
+
+        {phase === 'bulk_analyzing' && (
+          <SmartDocBulkQueue items={bulkItems} currentIndex={bulkIndex} currentLabel={stepLabel} />
+        )}
+
+        {phase === 'bulk_done' && (
+          <SmartDocBulkResults items={bulkItems} onReset={handleReset} />
         )}
 
         {phase === 'done' && report && (
@@ -87,6 +123,23 @@ export default function SmartDocAnalyzer() {
             <p className="text-xs text-slate-400 mb-4">{error}</p>
             <button onClick={handleReset} className="text-xs text-primary hover:text-primary/80 font-semibold">Încearcă din nou →</button>
           </div>
+        )}
+
+        {/* Bulk feature hint — only on idle */}
+        {phase === 'idle' && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+            className="rounded-2xl px-4 py-3 mt-4 flex items-center gap-3"
+            style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.08), rgba(37,99,235,0.05))', border: '1px solid rgba(6,182,212,0.20)' }}
+          >
+            <span className="text-2xl">🚀</span>
+            <div>
+              <p className="text-sm font-semibold text-white">Bulk upload disponibil</p>
+              <p className="text-xs text-slate-400">
+                Selectează mai multe fișiere odată — fiecare e analizat și primești un raport pe fiecare.
+              </p>
+            </div>
+          </motion.div>
         )}
 
         {/* Feature highlights — only on idle */}

@@ -7,13 +7,18 @@ import { Upload, FileText, Sparkles } from 'lucide-react';
 
 const ACCEPTED = '.pdf,.png,.jpg,.jpeg,.webp,.html,.csv,.xlsx,.json';
 
-export default function SmartDocUploader({ onFile, disabled }) {
+export default function SmartDocUploader({ onFile, onFiles, disabled }) {
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef(null);
 
   const handleFiles = (files) => {
     if (!files || files.length === 0) return;
-    onFile(files[0]);
+    const arr = Array.from(files);
+    if (arr.length > 1 && onFiles) {
+      onFiles(arr);
+    } else {
+      onFile(arr[0]);
+    }
   };
 
   return (
@@ -36,6 +41,7 @@ export default function SmartDocUploader({ onFile, disabled }) {
         ref={inputRef}
         type="file"
         accept={ACCEPTED}
+        multiple
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
       />
@@ -44,9 +50,12 @@ export default function SmartDocUploader({ onFile, disabled }) {
         <Upload className="w-7 h-7 text-white" />
       </div>
 
-      <h3 className="text-xl font-bold text-white mb-2">Încarcă orice document oficial</h3>
-      <p className="text-sm text-slate-400 max-w-md mx-auto mb-6">
+      <h3 className="text-xl font-bold text-white mb-2">Încarcă unul sau mai multe documente</h3>
+      <p className="text-sm text-slate-400 max-w-md mx-auto mb-2">
         Buletin, pașaport, permis, certificat, contract, factură. AI-ul îl analizează, verifică validitatea și îți explică totul pe înțelesul tău.
+      </p>
+      <p className="text-xs text-accent font-semibold mb-6">
+        🚀 Bulk upload: selectează mai multe fișiere odată
       </p>
 
       <div className="flex flex-wrap justify-center gap-2 text-xs">
