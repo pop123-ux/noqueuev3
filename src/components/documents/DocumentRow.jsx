@@ -7,7 +7,7 @@ import { differenceInDays, parseISO, format } from 'date-fns';
 import { CheckCircle2, AlertTriangle, XCircle, RefreshCw } from 'lucide-react';
 
 function ExpirationBadge({ status, expiryDate }) {
-  const days = expiryDate ? differenceInDays(parseISO(expiryDate), new Date()) : null;
+  const days = (() => { try { return expiryDate ? differenceInDays(parseISO(expiryDate), new Date()) : null; } catch { return null; } })();
 
   const config = {
     expired:      { label: 'Expirat',         color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   border: 'rgba(239,68,68,0.25)',  Icon: XCircle },
@@ -30,9 +30,10 @@ function ExpirationBadge({ status, expiryDate }) {
 }
 
 export default function DocumentRow({ doc }) {
-  const formattedExpiry = doc.expiry_date
-    ? format(parseISO(doc.expiry_date), 'd MMM yyyy')
-    : null;
+  const formattedExpiry = (() => {
+    if (!doc.expiry_date) return null;
+    try { return format(parseISO(doc.expiry_date), 'd MMM yyyy'); } catch { return doc.expiry_date; }
+  })();
 
   const actionStyle = doc.status === 'expired'
     ? { background: 'rgba(239,68,68,0.15)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' }
