@@ -423,8 +423,14 @@ export async function exportStructuredPassportPdf(profile, options = {}) {
     if (sigNorm && sigNorm.bytes && sigNorm.bytes.byteLength > 0) {
       try {
         let embeddedSig;
-        if (sigNorm.mimeType === 'image/jpeg') {
-          embeddedSig = await pdfDoc.embedJpg(sigNorm.bytes);
+        // Canvas normalization always outputs PNG — prefer embedPng
+        // Only fall back to embedJpg for raw JPEG bytes
+        if (sigNorm.mimeType === 'image/jpeg' && sigNorm.bytes.byteLength > 0) {
+          const head = new Uint8Array(sigNorm.bytes.slice(0, 4));
+          const isActuallyJpeg = head[0] === 0xff && head[1] === 0xd8;
+          embeddedSig = isActuallyJpeg
+            ? await pdfDoc.embedJpg(sigNorm.bytes)
+            : await pdfDoc.embedPng(sigNorm.bytes);
         } else {
           embeddedSig = await pdfDoc.embedPng(sigNorm.bytes);
         }
