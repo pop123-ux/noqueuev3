@@ -13,6 +13,7 @@ import Profile from './pages/Profile.jsx';
 import Onboarding from './pages/Onboarding';
 import IdentityVault from './pages/IdentityVault';
 import DigitalVault from './pages/DigitalVault';
+import PassportDemo from './pages/PassportDemo';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -49,6 +50,7 @@ const AuthenticatedApp = () => {
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/vault" element={<IdentityVault />} />
       <Route path="/digital-vault" element={<DigitalVault />} />
+      <Route path="/demo/passport" element={<PassportDemo />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

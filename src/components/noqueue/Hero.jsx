@@ -44,23 +44,23 @@ export default function Hero() {
             </p>
 
             <p className="mt-4 text-base sm:text-lg text-slate-400 max-w-lg leading-relaxed">
-              Your AI civic copilot for navigating Romanian bureaucracy in Cluj-Napoca — without queues, confusion, or missing documents.
+              Platforma de automatizare civica AI care elimina deplasarile inutile la institutii. Birocratie romaneasca — rezolvata digital, de acasa.
             </p>
 
             <div className="flex flex-wrap gap-3 mt-8">
-              <Link to="/start">
+              <Link to="/demo/passport">
                 <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-2xl px-6 h-12 text-base font-semibold gap-2">
-                  Start a Case <ArrowRight className="w-4 h-4" />
+                  ✈️ Demo Live: Pasaport Pierdut <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-              <Link to="/cases">
+              <Link to="/start">
                 <Button size="lg" variant="outline" className="border-white/10 text-white hover:bg-white/5 rounded-2xl px-6 h-12 text-base font-semibold gap-2">
-                  <Briefcase className="w-4 h-4" /> My Cases
+                  <Briefcase className="w-4 h-4" /> Toate Cazurile
                 </Button>
               </Link>
-              <Link to="/digital-vault">
+              <Link to="/vault">
                 <Button size="lg" variant="outline" className="border-accent/30 text-accent hover:bg-accent/10 rounded-2xl px-6 h-12 text-base font-semibold gap-2">
-                  🗂️ Digital Vault
+                  🔐 Identity Vault
                 </Button>
               </Link>
             </div>
@@ -99,34 +99,30 @@ export default function Hero() {
                   <span className="ml-2 text-xs text-slate-500 font-medium">NoQueue AI</span>
                 </div>
 
-                {/* User message */}
+                {/* User input simulation */}
                 <div className="flex justify-end mb-3">
-                  <div className="bg-primary/20 border border-primary/30 rounded-2xl rounded-br-md px-4 py-2.5 max-w-[80%]">
-                    <p className="text-sm text-white">I lost my ID card. What do I need?</p>
+                  <div className="bg-primary/20 border border-primary/30 rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]">
+                    <p className="text-sm text-white">🎤 "Am pierdut pasaportul"</p>
                   </div>
                 </div>
 
-                {/* AI response */}
-                <div className="flex justify-start">
-                  <div className="bg-white/5 border border-white/10 rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%]">
-                    <div className="text-[10px] font-bold text-success mb-1.5">✅ This can be done ONLINE</div>
-                    <p className="text-sm text-slate-200 leading-relaxed">
-                      Skip the queue. Use <span className="text-primary font-semibold">e-Cerere Cluj</span> or DEPABD online portal.
-                    </p>
-                    <div className="mt-2 pt-2 border-t border-white/5 grid grid-cols-2 gap-2">
-                      <div className="text-center">
-                        <div className="text-xs font-bold text-success">Case saved</div>
-                        <div className="text-[10px] text-slate-500">Tracked & reminded</div>
+                {/* Workflow result simulation */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                    <span className="text-[10px] font-bold text-success uppercase tracking-wider">Workflow lansat instant</span>
+                  </div>
+                  <p className="text-xs font-semibold text-white">Pierdere Pasaport → Inlocuire</p>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {['📄 Declaratie', '✅ Checklist', '📅 Programare'].map(item => (
+                      <div key={item} className="rounded-lg p-1.5 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <p className="text-[9px] text-slate-400 leading-tight">{item}</p>
                       </div>
-                      <div className="text-center">
-                        <div className="text-xs font-bold text-primary">24 min</div>
-                        <div className="text-[10px] text-slate-500">In-person queue</div>
-                      </div>
-                    </div>
-                    <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                      <span className="text-xs text-slate-400">Online-first routing · Case OS</span>
-                    </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between pt-1 border-t border-white/5">
+                    <span className="text-[9px] text-slate-500">Identity Vault ✓</span>
+                    <span className="text-[9px] text-primary font-semibold">~31 min coadă</span>
                   </div>
                 </div>
               </div>
