@@ -8,7 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Shield, User, CreditCard, MapPin, PenLine, FolderOpen,
-  Lock, Zap, Loader2, CheckCircle2, Eye, EyeOff, Save, AlertTriangle, ChevronRight, Ruler
+  Lock, Zap, Loader2, CheckCircle2, Eye, EyeOff, Save, AlertTriangle, ChevronRight, Ruler,
+  Users, Plus, Trash2
 } from 'lucide-react';
 
 const EYE_COLOR_OPTIONS = ['Căprui', 'Albaștri', 'Verzi', 'Negri', 'Gri', 'Căprui-verzui', 'Hazel', 'Altele'];
@@ -24,9 +25,19 @@ const TABS = [
   { id: 'personal', label: 'Date personale', icon: User },
   { id: 'identity', label: 'Act de identitate', icon: CreditCard },
   { id: 'address', label: 'Adresă', icon: MapPin },
+  { id: 'family', label: 'Familie', icon: Users },
   { id: 'signature', label: 'Semnătură', icon: PenLine },
   { id: 'documents', label: 'Documente încărcate', icon: FolderOpen },
   { id: 'privacy', label: 'Confidențialitate', icon: Lock },
+];
+
+const MILITARY_OPTIONS = [
+  { value: '', label: 'Selectează' },
+  { value: 'cadru_activ', label: 'Cadru activ' },
+  { value: 'recrut', label: 'Recrut' },
+  { value: 'rezervist', label: 'Rezervist' },
+  { value: 'fara_obligatii_militare', label: 'Fără obligații militare' },
+  { value: 'not_applicable', label: 'Nu este cazul' },
 ];
 
 function Field({ label, value, onChange, type = 'text', placeholder = '', masked = false }) {
@@ -331,6 +342,45 @@ export default function IdentityVault() {
                   </div>
                 </div>
 
+                {/* Date civice — folosite la cererea de eliberare CI */}
+                <div className="pt-3 mt-3 border-t border-white/5">
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <FolderOpen className="w-3.5 h-3.5 text-accent" />
+                    <p className="text-xs font-semibold text-white">Date civice</p>
+                    <span className="text-[10px] text-slate-500">— folosite la cererea CI (pierdere/furt)</span>
+                  </div>
+                  <div className="space-y-3">
+                    <Field
+                      label="Nume anterior (înainte de căsătorie/divorț)"
+                      value={profileData.previous_name}
+                      onChange={v => setProfileData(p => ({ ...p, previous_name: v }))}
+                      placeholder="Opțional"
+                    />
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Situație militară</label>
+                      <select
+                        value={profileData.military_status || ''}
+                        onChange={e => setProfileData(p => ({ ...p, military_status: e.target.value || null }))}
+                        className="w-full bg-white/[0.04] border border-white/10 text-white rounded-xl px-3 py-2 text-sm"
+                      >
+                        {MILITARY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                    </div>
+                    <Field
+                      label="Ultima școală absolvită"
+                      value={profileData.last_graduated_school}
+                      onChange={v => setProfileData(p => ({ ...p, last_graduated_school: v }))}
+                      placeholder="Ex: Liceul Teoretic, Universitatea Babeș-Bolyai"
+                    />
+                    <Field
+                      label="Ocupația actuală"
+                      value={profileData.current_occupation}
+                      onChange={v => setProfileData(p => ({ ...p, current_occupation: v }))}
+                      placeholder="Ex: Inginer software, Student, Pensionar"
+                    />
+                  </div>
+                </div>
+
                 <Button onClick={() => saveProfile.mutate(profileData)} disabled={saveProfile.isPending} className="w-full rounded-xl">
                   {saveProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   Salvează în Seif
@@ -380,6 +430,85 @@ export default function IdentityVault() {
                   <Field label="Județ" value={profileData.county} onChange={v => setProfileData(p => ({ ...p, county: v }))} placeholder="Cluj" />
                 </div>
                 <Field label="Cod poștal" value={profileData.postal_code} onChange={v => setProfileData(p => ({ ...p, postal_code: v }))} placeholder="400000" />
+                <Button onClick={() => saveProfile.mutate(profileData)} disabled={saveProfile.isPending} className="w-full rounded-xl">
+                  {saveProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                  Salvează în Seif
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {tab === 'family' && (
+            <motion.div key="family" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="glass-card rounded-2xl p-5 border border-white/8 space-y-4">
+                <div className="flex items-start gap-2">
+                  <Users className="w-4 h-4 text-accent mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-white">Copii minori</p>
+                    <p className="text-[11px] text-slate-500">Folosit la cererea de eliberare a actului de identitate.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {(profileData.minor_children || []).map((child, idx) => (
+                    <div key={idx} className="rounded-xl border border-white/8 p-3 bg-white/[0.02] space-y-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Copil #{idx + 1}</span>
+                        <button
+                          onClick={() => setProfileData(p => ({
+                            ...p,
+                            minor_children: (p.minor_children || []).filter((_, i) => i !== idx),
+                          }))}
+                          className="text-destructive/80 hover:text-destructive transition-colors"
+                          aria-label="Șterge copil"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <Field
+                        label="Nume și prenume"
+                        value={child.full_name}
+                        onChange={v => setProfileData(p => ({
+                          ...p,
+                          minor_children: (p.minor_children || []).map((c, i) => i === idx ? { ...c, full_name: v } : c),
+                        }))}
+                        placeholder="Ion Popescu"
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <Field
+                          label="Data nașterii"
+                          type="date"
+                          value={child.birth_date}
+                          onChange={v => setProfileData(p => ({
+                            ...p,
+                            minor_children: (p.minor_children || []).map((c, i) => i === idx ? { ...c, birth_date: v } : c),
+                          }))}
+                        />
+                        <Field
+                          label="Locul nașterii"
+                          value={child.birth_place}
+                          onChange={v => setProfileData(p => ({
+                            ...p,
+                            minor_children: (p.minor_children || []).map((c, i) => i === idx ? { ...c, birth_place: v } : c),
+                          }))}
+                          placeholder="Cluj-Napoca"
+                        />
+                      </div>
+                    </div>
+                  ))}
+
+                  <Button
+                    variant="outline"
+                    onClick={() => setProfileData(p => ({
+                      ...p,
+                      minor_children: [...(p.minor_children || []), { full_name: '', birth_date: '', birth_place: '' }],
+                    }))}
+                    className="w-full rounded-xl border-dashed border-white/15 text-slate-300 hover:text-white"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1.5" /> Adaugă copil minor
+                  </Button>
+                </div>
+
                 <Button onClick={() => saveProfile.mutate(profileData)} disabled={saveProfile.isPending} className="w-full rounded-xl">
                   {saveProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   Salvează în Seif
@@ -448,6 +577,101 @@ export default function IdentityVault() {
                   {(saveSecret.isPending || saveProfile.isPending) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   Salvează în Seif
                 </Button>
+
+                {/* Legal representative — used for the lost ID card request when applicant is minor */}
+                <div className="pt-4 mt-4 border-t border-white/5 space-y-3">
+                  <div className="flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-accent" />
+                    <p className="text-xs font-semibold text-white">Semnătură părinte / reprezentant legal</p>
+                    <span className="text-[10px] text-slate-500">— opțional</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">Folosit la cererea CI dacă solicitantul este minor sau este reprezentat legal.</p>
+
+                  <div className="flex items-center gap-3">
+                    <label className="inline-flex items-center gap-2 text-xs text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={!!profileData.is_minor_applicant}
+                        onChange={e => setProfileData(p => ({ ...p, is_minor_applicant: e.target.checked }))}
+                        className="rounded border-white/20 bg-white/[0.04]"
+                      />
+                      Solicitant minor
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-xs text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={!!profileData.represented_by_legal_guardian}
+                        onChange={e => setProfileData(p => ({ ...p, represented_by_legal_guardian: e.target.checked }))}
+                        className="rounded border-white/20 bg-white/[0.04]"
+                      />
+                      Reprezentat legal
+                    </label>
+                  </div>
+
+                  <Field
+                    label="Nume reprezentant legal"
+                    value={profileData.legal_representative_full_name}
+                    onChange={v => setProfileData(p => ({ ...p, legal_representative_full_name: v }))}
+                    placeholder="Ion Popescu"
+                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field
+                      label="Serie CI reprezentant"
+                      value={profileData.legal_representative_id_series}
+                      onChange={v => setProfileData(p => ({ ...p, legal_representative_id_series: v }))}
+                      placeholder="XX"
+                    />
+                    <Field
+                      label="Număr CI reprezentant"
+                      value={profileData.legal_representative_id_number}
+                      onChange={v => setProfileData(p => ({ ...p, legal_representative_id_number: v }))}
+                      placeholder="XXXXXX"
+                    />
+                  </div>
+
+                  {profileData.legal_representative_signature_file_url && (
+                    <div className="rounded-xl border border-white/10 p-3 bg-white/[0.02]">
+                      <p className="text-[10px] text-slate-500 mb-2">Previzualizare semnătură reprezentant</p>
+                      <div className="flex items-center justify-center bg-white rounded-lg p-3 min-h-[64px]">
+                        <img
+                          src={profileData.legal_representative_signature_file_url}
+                          alt="Semnătură reprezentant"
+                          className="max-h-16 max-w-full object-contain"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <label className="block">
+                    <span className="text-xs text-slate-400">Upload semnătură reprezentant (PNG/JPG)</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="mt-1 block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:bg-accent/20 file:text-accent hover:file:bg-accent/30"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const validation = validateUploadedFile(file);
+                        if (!validation.valid) { await audit.fileRejected(user?.email || 'anon', validation.error); alert(validation.error); return; }
+                        const rl = checkRateLimit('file_upload', user?.email || 'anon');
+                        if (!rl.allowed) { alert(rl.message); return; }
+                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                        await audit.fileUploaded(user?.email || 'anon', file.type);
+                        setProfileData(p => ({ ...p, legal_representative_signature_file_url: file_url }));
+                      }}
+                    />
+                  </label>
+
+                  <Button
+                    onClick={() => saveProfile.mutate(profileData)}
+                    disabled={saveProfile.isPending}
+                    variant="outline"
+                    className="w-full rounded-xl border-white/15 text-slate-300"
+                  >
+                    {saveProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                    Salvează datele reprezentantului
+                  </Button>
+                </div>
               </div>
             </motion.div>
           )}

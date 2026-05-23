@@ -175,6 +175,80 @@
     "source": {
       "type": "string",
       "description": "Where the latest profile snapshot came from (e.g. identity_card_scan, manual_entry, demo)."
+    },
+    "military_status": {
+      "type": "string",
+      "enum": [
+        "cadru_activ",
+        "recrut",
+        "rezervist",
+        "fara_obligatii_militare",
+        "not_applicable"
+      ],
+      "description": "Situa\u021bie militar\u0103 \u2014 folosit\u0103 la cererea de eliberare a actului de identitate."
+    },
+    "last_graduated_school": {
+      "type": "string",
+      "description": "Ultima \u0219coal\u0103 absolvit\u0103."
+    },
+    "current_occupation": {
+      "type": "string",
+      "description": "Ocupa\u021bia actual\u0103."
+    },
+    "previous_name": {
+      "type": "string",
+      "description": "Nume anterior (\u00eenainte de c\u0103s\u0103torie/divor\u021b)."
+    },
+    "previous_domicile_address": {
+      "type": "string",
+      "description": "Strada \u0219i num\u0103rul domiciliului anterior."
+    },
+    "previous_domicile_city": {
+      "type": "string"
+    },
+    "previous_domicile_county": {
+      "type": "string"
+    },
+    "minor_children": {
+      "type": "array",
+      "description": "Copii minori \u2014 folosit la cererea de eliberare CI.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "full_name": {
+            "type": "string"
+          },
+          "birth_date": {
+            "type": "string"
+          },
+          "birth_place": {
+            "type": "string"
+          }
+        }
+      },
+      "default": []
+    },
+    "legal_representative_full_name": {
+      "type": "string"
+    },
+    "legal_representative_id_series": {
+      "type": "string"
+    },
+    "legal_representative_id_number": {
+      "type": "string"
+    },
+    "legal_representative_signature_file_url": {
+      "type": "string"
+    },
+    "is_minor_applicant": {
+      "type": "boolean",
+      "default": false,
+      "description": "True dac\u0103 solicitantul este minor."
+    },
+    "represented_by_legal_guardian": {
+      "type": "boolean",
+      "default": false,
+      "description": "True dac\u0103 exist\u0103 reprezentant legal."
     }
   },
   "required": [

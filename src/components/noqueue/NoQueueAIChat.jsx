@@ -2,11 +2,13 @@
  * NoQueue AI — Deterministic pipeline with LLM fallback for unknown intents
  */
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, RefreshCw, AlertTriangle } from 'lucide-react';
 import {
   routeByQuickAction, routeByText, detectSpecialIntent, detectPassportIntent
 } from '@/lib/assistant/procedureRouter';
+import { detectLostIdIntent } from '@/lib/documents/documentRouter';
 import { clujInstitutions } from '@/lib/data/clujInstitutions';
 import { base44 } from '@/api/base44Client';
 import ProcedureResultCard from '@/components/assistant/ProcedureResultCard';
@@ -145,6 +147,7 @@ function PassportResultCard({ intent, profile }) {
 }
 
 export default function NoQueueAIChat({ onWorkflowDetected }) {
+  const navigate = useNavigate();
   const [result, setResult] = useState(null); // { type: 'workflow'|'queue'|'llm'|'passport', ... }
   const [loading, setLoading] = useState(false);
   const [pipelineStep, setPipelineStep] = useState(0);
@@ -215,6 +218,18 @@ export default function NoQueueAIChat({ onWorkflowDetected }) {
     }
 
     if (text) {
+      // Lost ID intent → dedicated /demo/lost-id-card workspace
+      const lostId = detectLostIdIntent(text);
+      if (lostId) {
+        await advanceStep(1, 300);
+        await advanceStep(2, 300);
+        await advanceStep(3, 250);
+        onWorkflowDetected?.({ workflowId: 'lost-id-card' });
+        setLoading(false);
+        navigate(lostId.route);
+        return;
+      }
+
       // Passport intent → Export PDF Draft workspace (priority over generic workflow card)
       const passportIntent = detectPassportIntent(text);
       if (passportIntent) {

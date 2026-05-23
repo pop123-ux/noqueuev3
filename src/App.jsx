@@ -23,6 +23,7 @@ import CivicCopilot from './pages/CivicCopilot';
 import LifeEvents from './pages/LifeEvents.jsx';
 import NoQueueOS from './pages/NoQueueOS.jsx';
 import RunDemo from './pages/RunDemo.jsx';
+import LostIdCardDemo from './pages/LostIdCardDemo.jsx';
 // TODO: re-enable for production — OnboardingGate is intentionally bypassed in DEMO MODE.
 // import OnboardingGate from './components/auth/OnboardingGate';
 // Add page imports here
@@ -94,6 +95,7 @@ const AuthenticatedApp = () => {
       <Route path="/life-events" element={<LifeEvents />} />
       <Route path="/os" element={<NoQueueOS />} />
       <Route path="/run-demo" element={<RunDemo />} />
+      <Route path="/demo/lost-id-card" element={<LostIdCardDemo />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
