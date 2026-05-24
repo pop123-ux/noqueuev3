@@ -2,7 +2,7 @@
  * RAG Answer Builder
  * Combines procedure knowledge + profile matching + AI to generate a structured case plan.
  */
-import { base44 } from '@/api/base44Client';
+import { secureAiClient } from '@/lib/ai/secureAiClient';
 import { findProcedure, CLUJ_PROCEDURES } from './clujProcedureKnowledge';
 import { clujInstitutions } from '@/lib/data/clujInstitutions';
 
@@ -68,7 +68,8 @@ IMPORTANT:
     }
   };
 
-  const aiPlan = await base44.integrations.Core.InvokeLLM({ prompt, response_json_schema: schema });
+  // Privacy: route through secureAiClient — user query + profile name may be present.
+  const aiPlan = await secureAiClient.invoke({ prompt, response_json_schema: schema });
 
   return {
     procedure,

@@ -2,7 +2,7 @@
  * Real AI Intake Engine — replaces mock clujChatEngine for case creation
  * Uses InvokeLLM with structured outputs for deterministic case routing
  */
-import { base44 } from '@/api/base44Client';
+import { secureAiClient } from '@/lib/ai/secureAiClient';
 import { clujInstitutions } from './clujInstitutions';
 import workflows from './workflows';
 import { retrieveDocuments } from './civicDocuments';
@@ -84,7 +84,8 @@ Output strict JSON only.`;
     }
   };
 
-  const result = await base44.integrations.Core.InvokeLLM({
+  // Privacy: route through secureAiClient — user message may contain names/CNP/addresses.
+  const result = await secureAiClient.invoke({
     prompt,
     response_json_schema: schema,
   });
@@ -138,5 +139,6 @@ Output strict JSON only.`;
     }
   };
 
-  return base44.integrations.Core.InvokeLLM({ prompt, response_json_schema: schema });
+  // Privacy: route through secureAiClient — user description may contain PII.
+  return secureAiClient.invoke({ prompt, response_json_schema: schema });
 }

@@ -13,7 +13,7 @@
  *  ✓ Response validated for unexpected data leakage
  */
 
-import { base44 } from '@/api/base44Client';
+import { secureAiClient } from '@/lib/ai/secureAiClient';
 import { buildSanitizedPrompt, detectPromptInjection } from './llmSanitizer';
 import { checkRateLimit } from './rateLimiter';
 import { audit } from './auditLogger';
@@ -68,7 +68,10 @@ export async function secureLLMGateway({
   if (responseSchema) invocationParams.response_json_schema = responseSchema;
   if (model)          invocationParams.model = model;
 
-  const response = await base44.integrations.Core.InvokeLLM(invocationParams);
+  // Defense in depth: even after local sanitization, route through the backend
+  // tokenization gateway so the AI provider receives only placeholders for any
+  // residual PII (and DB-persisted TokenMap rows are produced for audit).
+  const response = await secureAiClient.invoke(invocationParams);
 
   // 6. Validate response — reject if it contains data that looks like it leaked
   validateLLMResponse(response);

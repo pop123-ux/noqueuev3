@@ -9,6 +9,7 @@
  * Returns a single normalized AnalysisReport for the UI.
  */
 import { base44 } from '@/api/base44Client';
+import { secureAiClient } from '@/lib/ai/secureAiClient';
 
 /** JSON schema we ask the extractor to fill. Generic across RO civic docs. */
 const EXTRACTION_SCHEMA = {
@@ -135,7 +136,10 @@ Sarcina ta:
 
 Verifica cerintele actuale conform legislatiei romanesti in vigoare. Foloseste un ton clar, prietenos, fara jargon.`;
 
-  const analysis = await base44.integrations.Core.InvokeLLM({
+  // Privacy: prompt contains OCR-extracted PII (CNP, name, address, doc series).
+  // Route through secureAiClient — the backend tokenizes before calling the AI
+  // and rehydrates placeholders in the response.
+  const analysis = await secureAiClient.invoke({
     prompt,
     add_context_from_internet: true,
     response_json_schema: ANALYSIS_SCHEMA,

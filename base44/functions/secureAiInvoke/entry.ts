@@ -64,6 +64,14 @@ const PII_PATTERNS = [
   { type: 'person', regex: /\b[A-ZĂÂÎȘȚ][a-zăâîșț]{1,}\s+[A-ZĂÂÎȘȚ][a-zăâîșț]{1,}(?:\s+[A-ZĂÂÎȘȚ][a-zăâîșț]{1,})?\b/g },
 ];
 
+// Common false-positive matches that look like names but are place names, institutions,
+// or product names. These are NEVER tokenized.
+const PERSON_ALLOWLIST = new Set([
+  'Cluj Napoca', 'Cluj-Napoca', 'Cluj Napoca,', 'Bucuresti', 'București',
+  'NoQueue AI', 'NoQueue Cluj', 'Civic Copilot', 'Identity Vault',
+  'Strada Memorandumului', 'Bulevardul Eroilor',
+]);
+
 const PREFIX = {
   cnp: 'CNP',
   email: 'EMAIL',
@@ -84,6 +92,8 @@ function tokenizePrompt(prompt) {
 
   for (const { type, regex } of PII_PATTERNS) {
     working = working.replace(regex, (match) => {
+      // Skip well-known place/institution names that look like person names
+      if (type === 'person' && PERSON_ALLOWLIST.has(match)) return match;
       // Re-use placeholder if same exact value was already tokenized in this prompt
       if (valueToPlaceholder.has(match)) return valueToPlaceholder.get(match);
       counters[type] = (counters[type] || 0) + 1;
