@@ -1,0 +1,47 @@
+{
+  "name": "TokenMap",
+  "type": "object",
+  "description": "Encrypted mapping of PII placeholders (e.g. <PERSON_001>) to their original values. Used by secureAiInvoke to tokenize PII before sending to AI providers and rehydrate placeholders in AI responses. Original values are stored AES-256-GCM encrypted; only the backend can decrypt them.",
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "description": "Per-AI-call session identifier; placeholders are deterministic within a session."
+    },
+    "user_id": {
+      "type": "string",
+      "description": "Email of the authenticated user who owns this mapping."
+    },
+    "placeholder": {
+      "type": "string",
+      "description": "Token shown to the AI, e.g. <PERSON_001>, <CNP_001>."
+    },
+    "encrypted_value": {
+      "type": "string",
+      "description": "AES-256-GCM ciphertext (base64) of the original value: iv || tag || ciphertext."
+    },
+    "field_type": {
+      "type": "string",
+      "enum": [
+        "person",
+        "cnp",
+        "address",
+        "email",
+        "phone",
+        "passport",
+        "id_card",
+        "other"
+      ],
+      "default": "other"
+    },
+    "expires_at": {
+      "type": "string",
+      "description": "ISO timestamp after which this mapping is considered expired and may be purged."
+    }
+  },
+  "required": [
+    "session_id",
+    "placeholder",
+    "encrypted_value",
+    "field_type"
+  ]
+}
