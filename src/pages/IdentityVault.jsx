@@ -44,14 +44,14 @@ function Field({ label, value, onChange, type = 'text', placeholder = '', masked
   const [show, setShow] = useState(false);
   return (
     <div>
-      <label className="block text-xs text-slate-400 mb-1">{label}</label>
+      <label className="block text-xs font-medium text-slate-400 mb-1.5">{label}</label>
       <div className="relative">
         <Input
           type={masked && !show ? 'password' : type}
           value={value || ''}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
-          className="bg-white/[0.04] border-white/10 text-white placeholder:text-slate-600 rounded-xl pr-9"
+          className="h-11 rounded-xl bg-white/[0.04] border-white/10 text-white placeholder:text-slate-600 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all pr-9"
         />
         {masked && (
           <button
@@ -381,7 +381,7 @@ export default function IdentityVault() {
                   </div>
                 </div>
 
-                <Button onClick={() => saveProfile.mutate(profileData)} disabled={saveProfile.isPending} className="w-full rounded-xl">
+                <Button onClick={() => saveProfile.mutate(profileData)} disabled={saveProfile.isPending} className="w-full sm:w-auto h-11 px-6 rounded-xl bg-primary hover:bg-primary/85 text-white font-semibold text-sm shadow-lg shadow-primary/20 transition-all">
                   {saveProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   Salvează în Seif
                 </Button>
@@ -412,7 +412,7 @@ export default function IdentityVault() {
                 </div>
                 <Field label="Data nașterii" value={secretData.birth_date} onChange={v => setSecretData(s => ({ ...s, birth_date: v }))} type="date" />
                 <Field label="Loc de naștere" value={profileData.birth_place} onChange={v => setProfileData(p => ({ ...p, birth_place: v }))} placeholder="Cluj-Napoca" />
-                <Button onClick={() => saveSecret.mutate(secretData)} disabled={saveSecret.isPending} className="w-full rounded-xl">
+                <Button onClick={() => saveSecret.mutate(secretData)} disabled={saveSecret.isPending} className="w-full sm:w-auto h-11 px-6 rounded-xl bg-primary hover:bg-primary/85 text-white font-semibold text-sm shadow-lg shadow-primary/20 transition-all">
                   {saveSecret.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   Salvează în Seif
                 </Button>
@@ -430,7 +430,7 @@ export default function IdentityVault() {
                   <Field label="Județ" value={profileData.county} onChange={v => setProfileData(p => ({ ...p, county: v }))} placeholder="Cluj" />
                 </div>
                 <Field label="Cod poștal" value={profileData.postal_code} onChange={v => setProfileData(p => ({ ...p, postal_code: v }))} placeholder="400000" />
-                <Button onClick={() => saveProfile.mutate(profileData)} disabled={saveProfile.isPending} className="w-full rounded-xl">
+                <Button onClick={() => saveProfile.mutate(profileData)} disabled={saveProfile.isPending} className="w-full sm:w-auto h-11 px-6 rounded-xl bg-primary hover:bg-primary/85 text-white font-semibold text-sm shadow-lg shadow-primary/20 transition-all">
                   {saveProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   Salvează în Seif
                 </Button>
@@ -509,7 +509,7 @@ export default function IdentityVault() {
                   </Button>
                 </div>
 
-                <Button onClick={() => saveProfile.mutate(profileData)} disabled={saveProfile.isPending} className="w-full rounded-xl">
+                <Button onClick={() => saveProfile.mutate(profileData)} disabled={saveProfile.isPending} className="w-full sm:w-auto h-11 px-6 rounded-xl bg-primary hover:bg-primary/85 text-white font-semibold text-sm shadow-lg shadow-primary/20 transition-all">
                   {saveProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   Salvează în Seif
                 </Button>
@@ -572,7 +572,7 @@ export default function IdentityVault() {
                     ]);
                   }}
                   disabled={saveSecret.isPending || saveProfile.isPending}
-                  className="w-full rounded-xl"
+                  className="w-full sm:w-auto h-11 px-6 rounded-xl bg-primary hover:bg-primary/85 text-white font-semibold text-sm shadow-lg shadow-primary/20 transition-all"
                 >
                   {(saveSecret.isPending || saveProfile.isPending) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   Salvează în Seif

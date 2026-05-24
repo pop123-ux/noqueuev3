@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Zap, Plus, ChevronRight, Clock, CheckCircle2,
   Circle, AlertTriangle, Loader2, Trash2, FileText,
-  Building2, User, Sparkles, ArrowLeft, Shield, PlayCircle, ArrowRight } from
+  Building2, User, Sparkles, ArrowLeft, Shield, PlayCircle, ArrowRight, Briefcase } from
 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
@@ -256,29 +256,26 @@ export default function Cases() {
             <Loader2 className="w-6 h-6 text-primary animate-spin" />
           </div> :
         filtered.length === 0 ?
-        <div className="text-center py-14 glass-card rounded-2xl border border-white/[0.06]">
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <FileText className="w-7 h-7 text-primary" />
+        <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center py-24 px-6 text-center"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-5">
+              <Briefcase className="w-8 h-8 text-primary" />
             </div>
-            <p className="text-white text-base font-semibold mb-1">
-              {filter === 'all' ? 'No cases yet' : `No ${filter} cases`}
+            <h3 className="text-lg font-bold text-white mb-2">
+              {filter === 'all' ? 'Nu ai dosare active încă' : `Nu ai dosare ${filter}`}
+            </h3>
+            <p className="text-sm text-slate-400 max-w-xs mb-6 leading-relaxed">
+              Pornește primul tău flux civic cu NoQueue AI — descrie situația și primești documentele pregătite automat.
             </p>
-            <p className="text-slate-400 text-sm mb-5 max-w-sm mx-auto">
-              Start with the 90-second demo or create a case manually.
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <Link to="/run-demo" aria-label="Run 90 second demo">
-                <Button size="sm" className="bg-primary hover:bg-primary/90 rounded-xl">
-                  <PlayCircle className="w-4 h-4 mr-1.5" /> Run 90s Demo
-                </Button>
-              </Link>
-              <Link to="/start" aria-label="Start a new civic case">
-                <Button size="sm" variant="outline" className="rounded-xl border-white/10 bg-white/[0.03] hover:bg-white/[0.06] text-white">
-                  <Plus className="w-4 h-4 mr-1.5" /> Start a Case
-                </Button>
-              </Link>
-            </div>
-          </div> :
+            <Link to="/">
+              <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/85 transition-all shadow-lg shadow-primary/20">
+                <Zap className="w-4 h-4" /> Pornește cu NoQueue AI
+              </button>
+            </Link>
+          </motion.div> :
 
         <div className="space-y-3">
             <p className="text-xs text-slate-600 mb-2">Click any case to open the AI Workspace →</p>
