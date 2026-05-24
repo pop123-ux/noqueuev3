@@ -36,14 +36,14 @@ export default function Footer() {
               href="https://github.com/pop123-ux/NoQueuev3"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-xs text-primary hover:text-primary/80 transition-colors"
-            >
+              className="inline-flex items-center gap-2 text-xs text-primary hover:text-primary/80 transition-colors">
+              
               <Github className="w-4 h-4" />
               github.com/pop123-ux/NoQueuev3
               <ExternalLink className="w-3 h-3" />
             </a>
-            <p className="text-xs text-slate-500 mt-2">
-              Branch: feature/realistic-romanian-bureaucracy
+            <p className="text-xs text-slate-500 mt-2">Branch: main
+
             </p>
           </div>
         </div>
@@ -59,6 +59,6 @@ export default function Footer() {
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>);
+
 }
