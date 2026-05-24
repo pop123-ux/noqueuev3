@@ -15,11 +15,9 @@ import { Button } from '@/components/ui/button';
  */
 
 const OTHERS_ITEMS = [
-  { to: '/cases', icon: Briefcase, title: 'Dosarele mele', desc: 'Documente generate și proceduri active' },
   { to: '/life-events', icon: Sparkles, title: 'Evenimente de viață', desc: 'Pași ghidați pentru situații importante' },
-  { to: '/vault', icon: Shield, title: 'Seiful de Identitate', desc: 'Date securizate pentru auto-completare' },
-  { to: '/digital-vault', icon: FolderOpen, title: 'Vault digital', desc: 'Documente încărcate și organizate' },
   { to: '/smart-doc', icon: FileSearch, title: 'Smart Documents', desc: 'Documente generate automat', badge: 'NEW' },
+  { to: '#map', icon: MapPin, title: 'Hartă & Instituții', desc: 'Locații și disponibilitate' },
   { to: '/move-to-romania', icon: Globe2, title: 'Move to Romania', desc: 'Asistent pentru integrare și relocare' },
   { to: '/os', icon: Layers, title: 'Civic OS', desc: 'Modul experimental pentru infrastructură civică' },
   { to: '/run-demo', icon: PlayCircle, title: 'Demo run', desc: 'Parcurge fluxul complet pentru juriu' },
