@@ -33,13 +33,13 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-semibold text-white mb-3">Source Code</h4>
             <a
-              href="https://github.com/pop123-ux/noqueue"
+              href="https://github.com/pop123-ux/NoQueuev3"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-xs text-primary hover:text-primary/80 transition-colors"
             >
               <Github className="w-4 h-4" />
-              github.com/pop123-ux/noqueue
+              github.com/pop123-ux/NoQueuev3
               <ExternalLink className="w-3 h-3" />
             </a>
             <p className="text-xs text-slate-500 mt-2">
