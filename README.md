@@ -1,386 +1,304 @@
-# NoQueue v3 — Romania’s Civic Operating System
+# NoQueue v3 — Sistemul Civic Digital al României
 
-> Built for **Cluj Hackathon 2026 — Digital Romania**
-> Project made by:
-> **Pop Alexandru — Team Leader**
-> **Eric Ștefan Blideran**
-> **Darius Drînda**
+> Creat pentru **Cluj Hackathon 2026**  
+> Proiect realizat de Team **Code Blooded**:
+> **Pop Alexandru — Team Leader**  
+> **Eric Ștefan Blideran**  
+> **Darius Drînda**  
 > **Paul Ilișan**
-> A modern civic platform that helps citizens avoid unnecessary queues, understand bureaucracy, auto-prepare documents, and manage life events from one digital place.
+
+O platformă civică modernă care ajută cetățenii să evite cozile inutile, să înțeleagă birocrația, să pregătească automat documentele și să gestioneze evenimente importante din viață într-un singur loc digital.
 
 ---
 
-## Live Demo
+# Demo Live
 
-**Live app:**   `https://cluj-queue-clear.base44.app`
-**Repository:** `https://github.com/pop123-ux/NoQueuev3`
+**Aplicație live:**  
+`https://cluj-queue-clear.base44.app`
 
----
-
-## What is NoQueue?
-
-NoQueue is an AI-powered civic assistant and digital document workspace for Romanian public services.
-
-Instead of forcing citizens to search dozens of government websites, print unclear forms, wait in the wrong queue, or return because one document is missing, NoQueue gives them a guided flow:
-
-1. The user verifies identity once through a simulated ROeID-style flow.
-2. NoQueue builds a secure Safe Profile with reusable personal data.
-3. The user says what they need, for example:  
-   “I lost my ID”, “I need a passport”, “I moved to Romania”, “I need a tax certificate”.
-4. The app identifies the correct institution, documents, steps, appointment needs, and estimated time saved.
-5. The user receives a ready case workspace, document preparation sheets, reminders, and a civic timeline.
-
-NoQueue is not just a chatbot. It is a civic operating system that combines identity, documents, AI routing, audit history, and user-friendly workflows.
+**Repository GitHub:**  
+`https://github.com/pop123-ux/NoQueuev3`
 
 ---
 
-## The Problem
+# Ce este NoQueue?
 
-Romanian citizens waste hours because public-service flows are fragmented:
+NoQueue este un asistent civic bazat pe AI și un spațiu digital pentru gestionarea documentelor și serviciilor publice din România.
 
-- People do not know which institution handles their problem.
-- Required documents are unclear or scattered across multiple websites.
-- Citizens often make repeated visits because one paper is missing.
-- Government UX is usually slow, unclear, and not mobile-first.
-- Personal data has to be typed again and again into different forms.
-- Foreign citizens moving to Romania have an even harder time understanding the process.
-- There is no unified civic dashboard for cases, documents, expiry dates, and next steps.
+În loc ca utilizatorii să caute informații pe zeci de site-uri guvernamentale, să imprime formulare neclare sau să stea la cozi greșite, NoQueue oferă un flux simplificat și ghidat:
 
----
+1. Utilizatorul își verifică identitatea o singură dată printr-un flux inspirat de ROeID.
+2. NoQueue creează un profil securizat („Safe Profile”) cu date reutilizabile.
+3. Utilizatorul spune ce are nevoie:
+   - „Mi-am pierdut buletinul”
+   - „Am nevoie de pașaport”
+   - „Mă mut în România”
+   - „Am nevoie de certificat fiscal”
+4. Aplicația identifică instituția corectă, documentele necesare, pașii procedurali și timpul economisit.
+5. Utilizatorul primește un spațiu dedicat cazului, liste de pregătire, remindere și un istoric civic complet.
 
-## The Solution
-
-NoQueue turns bureaucracy into guided digital flows.
-
-The app helps users:
-
-- Understand what they need to do.
-- Start a civic case from natural language.
-- Auto-route to the correct institution or online portal.
-- Generate preparation sheets and document bundles.
-- Store identity and government documents in a digital vault.
-- Track document expiry dates.
-- Simulate secure ROeID-style identity onboarding.
-- Use 2FA before sensitive actions.
-- Keep an immutable civic activity timeline.
-- Estimate time saved by avoiding queues and repeated visits.
-- Navigate life events instead of searching legal procedures manually.
+NoQueue nu este doar un chatbot. Este un sistem civic digital care combină identitate, documente, AI, audit și fluxuri administrative într-o experiență modernă și ușor de folosit.
 
 ---
 
-## Example User Flows
+# Problema
 
-### 1. Lost ID Card
+Cetățenii români pierd ore întregi din cauza birocrației fragmentate:
 
-User says:
-
-> “I lost my ID.”
-
-NoQueue responds with:
-
-- Required police declaration.
-- Required documents for SPCLEP.
-- Preparation checklist.
-- Estimated time saved.
-- Institution guidance.
-- Case saved in the user dashboard.
-- Civic timeline entry.
+- Nu este clar ce instituție rezolvă fiecare problemă.
+- Documentele necesare sunt greu de găsit sau împrăștiate pe mai multe site-uri.
+- Oamenii trebuie să revină de mai multe ori deoarece lipsește un act.
+- Experiența digitală a instituțiilor este deseori lentă și neadaptată pentru mobil.
+- Datele personale trebuie introduse din nou și din nou.
+- Cetățenii străini care se mută în România întâmpină dificultăți și mai mari.
+- Nu există un dashboard civic unificat pentru documente, cazuri și expirări.
 
 ---
 
-### 2. Passport Application
+# Soluția
 
-User says:
+NoQueue transformă birocrația în fluxuri digitale ghidate.
 
-> “I need a passport.”
+Platforma ajută utilizatorii să:
 
-NoQueue responds with:
-
-- Passport appointment guidance.
-- Required documents.
-- Payment information placeholder.
-- Preparation sheet.
-- Reminder that the official passport form is completed by the officer, not generated falsely by the app.
-- Link/guidance toward the official ePașapoarte process.
-
----
-
-### 3. Moving to Romania
-
-User says:
-
-> “I am moving to Romania.”
-
-NoQueue responds with a relocation roadmap:
-
-- Residency steps.
-- Health insurance steps.
-- Tax registration guidance.
-- Local institution suggestions.
-- Estimated bureaucracy timeline.
-- Saved-time estimate.
+- Înțeleagă exact ce trebuie să facă.
+- Creeze cazuri administrative din limbaj natural.
+- Fie direcționați către instituția corectă.
+- Genereze fișe de pregătire și seturi de documente.
+- Stocheze documente într-un seif digital.
+- Monitorizeze expirarea actelor.
+- Utilizeze onboarding securizat inspirat de ROeID.
+- Activeze autentificare 2FA pentru acțiuni sensibile.
+- Păstreze un istoric civic imuabil.
+- Estimeze timpul economisit prin evitarea cozilor.
 
 ---
 
-### 4. Digital Vault
+# Exemple de Fluxuri
 
-The user can store and manage:
+## 1. Buletin pierdut
 
-- ID card data.
-- Passport-related records.
-- Government documents.
-- Expiry dates.
-- Generated preparation documents.
-- Audit history.
+Utilizatorul spune:
 
----
+> „Mi-am pierdut buletinul.”
 
-## Core Features
+NoQueue oferă:
 
-### NoQueue OS Dashboard
-
-The main civic dashboard shows:
-
-- Estimated bureaucracy time saved.
-- Active life events.
-- Active cases.
-- Forms prepared.
-- Queues avoided.
-- Trips avoided.
-- Documents expiring soon.
-- Immutable civic history timeline.
+- Declarația necesară.
+- Lista documentelor pentru SPCLEP.
+- Checklist de pregătire.
+- Estimare de timp economisit.
+- Ghidare către instituția corectă.
+- Salvarea cazului în dashboard.
+- Înregistrare în istoricul civic.
 
 ---
 
-### Safe Profile
+## 2. Cerere Pașaport
 
-The Safe Profile stores reusable identity information so citizens do not repeatedly type the same data.
+Utilizatorul spune:
 
-Stored profile fields may include:
+> „Am nevoie de pașaport.”
 
-- First name
-- Last name
-- Full name
-- Date of birth
-- Birth place
-- Address
-- City
-- County
-- ID series
-- ID number
-- ID expiry date
-- Citizenship
-- Signature status
-- OCR verification status
+NoQueue oferă:
 
-Sensitive fields are encrypted or masked where appropriate in the prototype.
+- Ghid pentru programare.
+- Lista documentelor necesare.
+- Informații despre taxe.
+- Fișă de pregătire.
+- Mențiunea că formularul oficial este completat doar de autorități.
+- Ghid către procesul oficial ePașapoarte.
 
 ---
 
-### ROeID-Style Identity Onboarding Simulation
+## 3. Mutare în România
 
-NoQueue includes a simulated identity verification flow inspired by ROeID:
+Utilizatorul spune:
 
-1. Email entry.
-2. ID upload.
-3. OCR processing.
-4. User review of extracted data.
-5. 2FA verification.
-6. Safe Profile creation.
-7. Civic timeline logging.
+> „Mă mut în România.”
 
-This is a prototype simulation and not an official government authentication system.
+NoQueue generează:
 
----
-
-### Romanian ID OCR
-
-The app includes a Romanian ID OCR flow that extracts identity data from uploaded documents and lets the user verify the extracted fields before saving.
-
-OCR output is never blindly trusted. The user must review and confirm the data.
+- Pași pentru rezidență.
+- Ghid pentru asigurare medicală.
+- Înregistrare fiscală.
+- Instituții relevante.
+- Estimare a procesului birocratic.
+- Timp economisit estimat.
 
 ---
 
-### Two-Factor Authentication
+# Funcționalități Principale
 
-NoQueue includes a Google Authenticator-compatible TOTP simulation:
+## Dashboard Civic NoQueue OS
 
-- QR code setup.
-- Manual secret option.
-- 6-digit verification.
-- Backup codes.
-- 2FA confirmation before profile generation.
+Dashboard-ul principal afișează:
 
-For production, the TOTP secret should be generated and stored server-side. In this hackathon prototype, it is handled client-side for demonstration purposes.
-
----
-
-### AI Civic Case Classifier
-
-The user can describe a problem in normal language.
-
-Examples:
-
-- “I need to renew my ID.”
-- “My driving license expired.”
-- “I need a criminal record.”
-- “I want to register a company.”
-- “I need health insurance proof.”
-- “I want to get divorced.”
-- “I moved to Romania.”
-
-The app classifies the request and returns:
-
-- Procedure title.
-- Institution.
-- Required documents.
-- Whether it can be done online.
-- Best time or channel.
-- Risks and warnings.
-- Next action.
-- Case workspace.
+- Timp economisit.
+- Cazuri active.
+- Evenimente importante.
+- Formulare pregătite.
+- Cozi evitate.
+- Drumuri evitate.
+- Documente care expiră.
+- Istoric civic complet.
 
 ---
 
-### Document Router
+## Safe Profile
 
-NoQueue maps user intent to document templates and preparation sheets.
+Profilul securizat stochează informații reutilizabile precum:
 
-Supported procedure categories include:
+- Prenume
+- Nume
+- Data nașterii
+- Locul nașterii
+- Adresă
+- Oraș
+- Județ
+- Serie CI
+- Număr CI
+- Expirare CI
+- Cetățenie
 
-- ID renewal.
-- Lost or stolen ID.
-- Domicile/address change.
-- Passport.
-- Urgent passport.
-- Passport history request.
-- RNEPS data request.
-- Generic request.
-- Declaration on own responsibility.
-- Notary-related flows.
-- Driving license.
-- ANAF/tax certificate.
-- Company registration.
-- Divorce.
-- Criminal record.
-- Health insurance.
+Datele sensibile sunt mascate sau criptate în prototip.
 
 ---
 
-### Document Generation
+## Verificare Identitate Tip ROeID
 
-NoQueue generates **preparation sheets** and support documents for the citizen.
+Fluxul de onboarding include:
 
-Important legal/product principle:
+1. Introducere email
+2. Upload CI
+3. OCR automat
+4. Verificarea datelor extrase
+5. Verificare 2FA
+6. Crearea profilului
+7. Înregistrare în timeline
 
-> NoQueue must not generate fake official government documents.
-
-When an official form is completed only by a public servant or inside an official government system, NoQueue generates a clearly marked preparation sheet instead of pretending to produce an official document.
-
-Generated files can be downloaded and attached to a case.
-
----
-
-### Life Events
-
-Instead of forcing users to know bureaucratic terms, NoQueue lets users start from life events:
-
-- I lost my ID.
-- I moved to a new address.
-- I moved to Romania.
-- I got married.
-- I had a child.
-- I need healthcare access.
-- I started a company.
-- I changed jobs.
-- I need a passport.
-- I need residency.
-- I became a student.
-- I need tax registration.
-- I need social assistance.
-- Someone passed away.
-
-Each life event maps to one or more workflows and shows estimated time saved.
+Acesta este un prototip demonstrativ și nu un sistem oficial guvernamental.
 
 ---
 
-### Digital Vault
+## OCR pentru Carte de Identitate
 
-The Digital Vault is a single place for government-issued documents and personal records.
+Aplicația poate extrage date din CI și permite utilizatorului să confirme informațiile înainte de salvare.
 
-It is designed to help users:
-
-- Store documents.
-- Search documents.
-- Track expiry dates.
-- Download prepared files.
-- Reuse verified profile data.
-- Avoid storing everything physically at home.
+OCR-ul nu este considerat sursă finală fără verificarea utilizatorului.
 
 ---
 
-### Civic Timeline Ledger
+## Autentificare cu Doi Factori (2FA)
 
-NoQueue records important actions in a civic timeline:
+NoQueue include suport TOTP compatibil cu Google Authenticator:
 
-- Identity verified.
-- Demo run executed.
-- Life event started.
-- Document generated.
-- Signature approved.
-- Case created.
-- Profile updated.
-
-This simulates the “data is not silently deleted or modified” requirement expected in serious public-service apps.
+- Configurare QR
+- Cod secret manual
+- Verificare cu cod de 6 cifre
+- Coduri backup
+- Confirmare înainte de acțiuni sensibile
 
 ---
 
-### Secure LLM Gateway
+## Clasificator AI pentru Cazuri Administrative
 
-NoQueue includes a secure AI gateway pattern designed around this principle:
+Utilizatorul poate scrie:
 
-> The LLM should not receive raw personal identity data.
+- „Trebuie să îmi schimb buletinul”
+- „Mi-a expirat permisul”
+- „Am nevoie de cazier”
+- „Vreau să deschid o firmă”
 
-Security features include:
+Aplicația returnează:
 
-- PII sanitization before AI calls.
-- Placeholder replacement for sensitive fields.
-- Prompt-injection detection.
-- Rate-limiting checks.
-- Audit logging.
-- Response validation to block accidental CNP or ID leakage.
-
----
-
-### Prompt Injection Protection
-
-The app checks user text and OCR-extracted text for suspicious instructions such as:
-
-- “Ignore previous instructions”
-- “Reveal system prompt”
-- “Dump database”
-- “Developer mode”
-- Script injection attempts
-
-Suspicious content is rejected or sanitized before reaching the AI layer.
+- Procedura corectă
+- Instituția responsabilă
+- Documentele necesare
+- Posibilitatea online/offline
+- Avertismente și riscuri
+- Următorul pas
 
 ---
 
-### Audit Logging
+# Principiu Legal Important
 
-Security-relevant actions are logged without exposing sensitive values.
+> NoQueue NU generează documente oficiale false.
 
-Examples:
-
-- File uploaded.
-- File rejected.
-- Document generated.
-- Rate limit hit.
-- Injection attempt detected.
-- Vault save.
-- Data export.
-- Vault deletion.
-
-Sensitive patterns like CNPs, ID numbers, phone numbers, and emails are redacted from audit details.
+Dacă un formular trebuie completat exclusiv de autorități, aplicația generează doar o fișă de pregătire clar marcată.
 
 ---
+
+# Evenimente de Viață
+
+NoQueue permite pornirea fluxurilor administrative din evenimente reale:
+
+- Mi-am pierdut buletinul
+- M-am mutat
+- M-am căsătorit
+- Am avut un copil
+- Am nevoie de asigurare medicală
+- Am deschis o firmă
+
+---
+
+# Digital Vault
+
+Seiful digital permite:
+
+- Stocarea documentelor
+- Căutare rapidă
+- Monitorizarea expirării
+- Descărcarea fișierelor
+- Reutilizarea datelor verificate
+
+---
+
+# Timeline Civic
+
+Sunt înregistrate acțiuni precum:
+
+- Identitate verificată
+- Document generat
+- Caz creat
+- Profil actualizat
+- Semnătură aprobată
+
+---
+
+# Gateway AI Securizat
+
+NoQueue folosește un model AI securizat:
+
+- Eliminare PII înainte de request-uri AI
+- Detectare prompt injection
+- Logging și audit
+- Validare răspunsuri
+- Protecție împotriva scurgerii datelor personale
+
+---
+
+# Protecție Prompt Injection
+
+Sunt detectate expresii precum:
+
+- „Ignore previous instructions”
+- „Reveal system prompt”
+- „Dump database”
+- „Developer mode”
+
+Conținutul suspect este blocat sau sanitizat.
+
+---
+
+# Audit Logging
+
+Sunt înregistrate evenimente precum:
+
+- Upload fișier
+- Document generat
+- Tentativă de injection
+- Salvare în vault
+- Export date
+
+Datele sensibile sunt mascate automat.
